@@ -12,6 +12,8 @@ import {
     Users,
     UserCheck,
     AlertCircle,
+    Wifi,
+    WifiOff,
 } from "lucide-react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 
@@ -26,6 +28,7 @@ interface ProfileData {
     totalLikes: number;
     totalComments: number;
     engagementRate: number;
+    isLive?: boolean;
 }
 
 export default function AnalyticsPage() {
@@ -90,16 +93,27 @@ export default function AnalyticsPage() {
     return (
         <div className="space-y-8 animate-in">
             {/* Header */}
-            <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)]/10 flex items-center justify-center">
-                    <BarChart3 size={20} className="text-[var(--color-primary)]" />
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)]/10 flex items-center justify-center">
+                        <BarChart3 size={20} className="text-[var(--color-primary)]" />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-bold text-[var(--color-text)]">Instagram Analytics</h1>
+                        <p className="text-sm text-[var(--color-text-muted)]">
+                            Analyze any Instagram profile with AI insights
+                        </p>
+                    </div>
                 </div>
-                <div>
-                    <h1 className="text-2xl font-bold text-[var(--color-text)]">Instagram Analytics</h1>
-                    <p className="text-sm text-[var(--color-text-muted)]">
-                        Analyze any Instagram profile with AI insights
-                    </p>
-                </div>
+                {profile && (
+                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${profile.isLive
+                            ? "bg-emerald-50 text-emerald-600"
+                            : "bg-amber-50 text-amber-600"
+                        }`}>
+                        {profile.isLive ? <Wifi size={12} /> : <WifiOff size={12} />}
+                        {profile.isLive ? "Live Data" : "Mock Data"}
+                    </div>
+                )}
             </div>
 
             {/* Search Form */}
@@ -139,9 +153,17 @@ export default function AnalyticsPage() {
                     <div className="card">
                         <div className="flex flex-col sm:flex-row items-start gap-5">
                             {/* Avatar */}
-                            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[var(--color-primary)] to-purple-400 flex items-center justify-center text-white text-2xl font-bold shrink-0">
-                                {profile.name.charAt(0).toUpperCase()}
-                            </div>
+                            {profile.profilePicture ? (
+                                <img
+                                    src={profile.profilePicture}
+                                    alt={profile.name}
+                                    className="w-20 h-20 rounded-2xl object-cover shrink-0"
+                                />
+                            ) : (
+                                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[var(--color-primary)] to-purple-400 flex items-center justify-center text-white text-2xl font-bold shrink-0">
+                                    {profile.name.charAt(0).toUpperCase()}
+                                </div>
+                            )}
                             <div className="flex-1 min-w-0">
                                 <h2 className="text-xl font-bold text-[var(--color-text)]">{profile.name}</h2>
                                 <p className="text-sm text-[var(--color-primary)] font-medium">@{profile.username}</p>

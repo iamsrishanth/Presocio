@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Presocio 🚀
 
-## Getting Started
+Presocio is an AI-powered social media management platform designed to help creators and businesses streamline their social media presence. 
 
-First, run the development server:
+## Features ✨
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Analytics Dashboard**: Connect your Instagram account using the Instagram Graph API to view live engagement metrics and recent posts.
+- **AI Content Strategy**: Generate comprehensive 30-day content strategies tailored to your brand using Google's Gemini AI.
+- **AI Video Scripts**: Create engaging, platform-optimized video scripts for TikTok, Instagram Reels, and YouTube Shorts.
+- **AI Carousels**: Automatically generate educational and engaging carousel posts with slide-by-slide copy.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Getting Started 🛠️
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Prerequisites
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Node.js 18+
+- npm or yarn
+- An Instagram Creator/Business account linked to a Facebook Page (for live data)
+- Google Gemini API Key (for AI features)
 
-## Learn More
+### Installation
 
-To learn more about Next.js, take a look at the following resources:
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Set up your environment variables:
+   - Copy `.env.local.example` or `.env` to `.env.local`
+   - Add your `GEMINI_API_KEY`
+   - Add your `INSTAGRAM_ACCESS_TOKEN` and `INSTAGRAM_ACCOUNT_ID` (Instructions provided in `.env.local`)
+4. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Mock Data Mode
+If you don't have an Instagram Access Token, Presocio will automatically fall back to using mock data so you can still explore the dashboard and analytics features.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tech Stack 💻
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Framework**: Next.js (App Router)
+- **Styling**: Tailwind CSS
+- **Icons**: Lucide React
+- **AI Integration**: Google Gemini API (@google/genai)
+- **Social API**: Instagram Graph API

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   Heart,
@@ -11,48 +12,41 @@ import {
   Image,
   Film,
   ArrowRight,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 import Link from "next/link";
-import { dashboardStats, mockPosts } from "@/lib/mockData";
+import LoadingSpinner from "@/components/LoadingSpinner";
 
-const statCards = [
-  {
-    label: "Total Posts",
-    value: dashboardStats.totalPosts.toLocaleString(),
-    icon: FileText,
-    color: "text-[var(--color-primary)]",
-    bg: "bg-[var(--color-primary)]/8",
-  },
-  {
-    label: "Avg Likes",
-    value: dashboardStats.avgLikes.toLocaleString(),
-    icon: Heart,
-    color: "text-pink-500",
-    bg: "bg-pink-500/8",
-  },
-  {
-    label: "Avg Comments",
-    value: dashboardStats.avgComments.toLocaleString(),
-    icon: MessageCircle,
-    color: "text-blue-500",
-    bg: "bg-blue-500/8",
-  },
-  {
-    label: "Engagement Rate",
-    value: `${dashboardStats.engagementRate}%`,
-    icon: TrendingUp,
-    color: "text-emerald-500",
-    bg: "bg-emerald-500/8",
-  },
-];
+interface Post {
+  id: string;
+  thumbnail: string;
+  caption: string;
+  likes: number;
+  comments: number;
+  timestamp: string;
+  type: "image" | "video" | "carousel";
+  mediaUrl?: string;
+}
 
-const postTypeIcon = {
+interface DashboardData {
+  totalPosts: number;
+  avgLikes: number;
+  avgComments: number;
+  engagementRate: number;
+  posts: Post[];
+  isLive: boolean;
+  username?: string;
+  profilePicture?: string;
+}
+
+const postTypeIcon: Record<string, typeof Image> = {
   image: Image,
   video: Film,
   carousel: Layers,
 };
 
-const postTypeColor = {
+const postTypeColor: Record<string, string> = {
   image: "bg-blue-100 text-blue-600",
   video: "bg-red-100 text-red-600",
   carousel: "bg-purple-100 text-purple-600",
@@ -67,19 +61,111 @@ function timeAgo(dateStr: string) {
 }
 
 export default function DashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const res = await fetch("/api/instagram");
+        const profile = await res.json();
+
+        const posts: Post[] = profile.posts || [];
+        const totalLikes = posts.reduce((s: number, p: Post) => s + p.likes, 0);
+        const totalComments = posts.reduce((s: number, p: Post) => s + p.comments, 0);
+        const count = posts.length || 1;
+
+        setData({
+          totalPosts: profile.totalPosts || posts.length,
+          avgLikes: Math.round(totalLikes / count),
+          avgComments: Math.round(totalComments / count),
+          engagementRate: profile.engagementRate || 0,
+          posts,
+          isLive: profile.isLive || false,
+          username: profile.username,
+          profilePicture: profile.profilePicture,
+        });
+      } catch {
+        // Fallback to empty state
+        setData({
+          totalPosts: 0,
+          avgLikes: 0,
+          avgComments: 0,
+          engagementRate: 0,
+          posts: [],
+          isLive: false,
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <LoadingSpinner text="Loading dashboard..." size="lg" />
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const statCards = [
+    {
+      label: "Total Posts",
+      value: data.totalPosts.toLocaleString(),
+      icon: FileText,
+      color: "text-[var(--color-primary)]",
+      bg: "bg-[var(--color-primary)]/8",
+    },
+    {
+      label: "Avg Likes",
+      value: data.avgLikes.toLocaleString(),
+      icon: Heart,
+      color: "text-pink-500",
+      bg: "bg-pink-500/8",
+    },
+    {
+      label: "Avg Comments",
+      value: data.avgComments.toLocaleString(),
+      icon: MessageCircle,
+      color: "text-blue-500",
+      bg: "bg-blue-500/8",
+    },
+    {
+      label: "Engagement Rate",
+      value: `${data.engagementRate}%`,
+      icon: TrendingUp,
+      color: "text-emerald-500",
+      bg: "bg-emerald-500/8",
+    },
+  ];
+
   return (
     <div className="space-y-8 animate-in">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-3 mb-1">
-          <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)]/10 flex items-center justify-center">
-            <LayoutDashboard size={20} className="text-[var(--color-primary)]" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-10 h-10 rounded-xl bg-[var(--color-primary)]/10 flex items-center justify-center">
+              <LayoutDashboard size={20} className="text-[var(--color-primary)]" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-[var(--color-text)]">Dashboard</h1>
+              <p className="text-sm text-[var(--color-text-muted)]">
+                Overview of your social media performance
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-[var(--color-text)]">Dashboard</h1>
-            <p className="text-sm text-[var(--color-text-muted)]">
-              Overview of your social media performance
-            </p>
+          {/* Live/Mock indicator */}
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${data.isLive
+              ? "bg-emerald-50 text-emerald-600"
+              : "bg-amber-50 text-amber-600"
+            }`}>
+            {data.isLive ? <Wifi size={12} /> : <WifiOff size={12} />}
+            {data.isLive ? `Live — @${data.username}` : "Mock Data"}
           </div>
         </div>
       </div>
@@ -135,39 +221,57 @@ export default function DashboardPage() {
       {/* Recent Posts */}
       <div>
         <h2 className="text-lg font-bold text-[var(--color-text)] mb-4">Recent Posts</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {mockPosts.map((post) => {
-            const TypeIcon = postTypeIcon[post.type];
-            return (
-              <div key={post.id} className="card">
-                {/* Thumbnail placeholder */}
-                <div className="w-full h-40 rounded-lg bg-gradient-to-br from-[var(--color-primary)]/10 to-[var(--color-primary)]/5 mb-3 flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 opacity-80" />
-                  <TypeIcon size={32} className="text-[var(--color-primary)]/40 relative z-10" />
-                  <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase z-10 ${postTypeColor[post.type]}`}>
-                    {post.type}
-                  </span>
-                </div>
-                <p className="text-sm text-[var(--color-text)] line-clamp-2 mb-3 leading-relaxed">
-                  {post.caption}
-                </p>
-                <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)]">
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center gap-1">
-                      <Heart size={12} className="text-pink-400" />{" "}
-                      {post.likes.toLocaleString()}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MessageCircle size={12} className="text-blue-400" />{" "}
-                      {post.comments.toLocaleString()}
+        {data.posts.length === 0 ? (
+          <div className="card text-center py-12">
+            <p className="text-sm text-[var(--color-text-muted)]">No posts found. Connect your Instagram account to see live data.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {data.posts.map((post) => {
+              const TypeIcon = postTypeIcon[post.type] || Image;
+              return (
+                <div key={post.id} className="card">
+                  {/* Thumbnail */}
+                  <div className="w-full h-40 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100">
+                    {post.thumbnail || post.mediaUrl ? (
+                      <img
+                        src={post.thumbnail || post.mediaUrl}
+                        alt={post.caption?.slice(0, 50) || "Post"}
+                        className="w-full h-full object-cover rounded-lg"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                          (e.target as HTMLImageElement).nextElementSibling?.classList.remove("hidden");
+                        }}
+                      />
+                    ) : null}
+                    <div className={`${post.thumbnail || post.mediaUrl ? "hidden" : ""} flex items-center justify-center absolute inset-0`}>
+                      <TypeIcon size={32} className="text-[var(--color-primary)]/40" />
+                    </div>
+                    <span className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase z-10 ${postTypeColor[post.type] || "bg-gray-100 text-gray-600"}`}>
+                      {post.type}
                     </span>
                   </div>
-                  <span>{timeAgo(post.timestamp)}</span>
+                  <p className="text-sm text-[var(--color-text)] line-clamp-2 mb-3 leading-relaxed">
+                    {post.caption || "No caption"}
+                  </p>
+                  <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)]">
+                    <div className="flex items-center gap-3">
+                      <span className="flex items-center gap-1">
+                        <Heart size={12} className="text-pink-400" />{" "}
+                        {post.likes.toLocaleString()}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <MessageCircle size={12} className="text-blue-400" />{" "}
+                        {post.comments.toLocaleString()}
+                      </span>
+                    </div>
+                    <span>{timeAgo(post.timestamp)}</span>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

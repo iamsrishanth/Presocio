@@ -60,7 +60,7 @@ export default function Sidebar() {
             </div>
             <div>
               <h1 className="text-lg font-bold text-[var(--color-text)] tracking-tight">
-                SocialFlow
+                Presocio
               </h1>
               <p className="text-[10px] font-medium text-[var(--color-text-muted)] uppercase tracking-widest">
                 AI-Powered

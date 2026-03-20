@@ -1,4 +1,4 @@
-// Mock data for the SocialFlow application
+// Mock data for the Presocio application
 
 export interface InstagramPost {
     id: string;
@@ -24,8 +24,8 @@ export interface InstagramProfile {
 }
 
 export const mockProfile: InstagramProfile = {
-    username: "socialflow.ai",
-    name: "SocialFlow AI",
+    username: "presocio.ai",
+    name: "Presocio AI",
     bio: "🚀 AI-powered social media manager | 📊 Analytics & Insights | 🎥 Content Creation Tools",
     profilePicture: "",
     followers: 12_540,
@@ -76,7 +76,7 @@ export const mockPosts: InstagramPost[] = [
     {
         id: "5",
         thumbnail: "",
-        caption: "Behind the scenes at SocialFlow HQ 🏢 Building the future of social media management",
+        caption: "Behind the scenes at Presocio HQ 🏢 Building the future of social media management",
         likes: 743,
         comments: 52,
         timestamp: "2026-03-10T11:00:00Z",

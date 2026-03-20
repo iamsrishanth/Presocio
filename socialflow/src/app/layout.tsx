@@ -3,9 +3,8 @@ import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 
 export const metadata: Metadata = {
-  title: "SocialFlow — AI-Powered Social Media Manager",
-  description:
-    "Manage your social media with AI-powered analytics, video scripts, and carousel content.",
+  title: "Presocio — AI-Powered Social Media Manager",
+  description: "Manage your social media presence with AI-powered tools.",
 };
 
 export default function RootLayout({
