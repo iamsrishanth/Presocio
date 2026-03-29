@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Presocio — MVP Structured Prompt</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --card: #16161f;
+    --border: #2a2a3a;
+    --accent: #ff4d6d;
+    --accent2: #7c5cfc;
+    --accent3: #00d4aa;
+    --accent4: #ffc857;
+    --text: #e8e8f0;
+    --muted: #8888aa;
+    --dimmed: #55556a;
+    --glow: rgba(124, 92, 252, 0.18);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  /* GLOW BLOBS */
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .blob-1 { width: 500px; height: 500px; background: rgba(124,92,252,0.12); top: -200px; right: -100px; }
+  .blob-2 { width: 400px; height: 400px; background: rgba(255,77,109,0.08); bottom: 100px; left: -150px; }
+  .blob-3 { width: 300px; height: 300px; background: rgba(0,212,170,0.07); top: 50%; right: 200px; }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1060px;
+    margin: 0 auto;
+    padding: 60px 40px 100px;
+  }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 70px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .logo-block { display: flex; flex-direction: column; gap: 8px; }
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -2px;
+    line-height: 1;
+    background: linear-gradient(135deg, #fff 30%, var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .logo span { color: var(--accent); -webkit-text-fill-color: var(--accent); }
+  .tagline {
+    font-family: 'Instrument Serif', serif;
+    font-style: italic;
+    font-size: 16px;
+    color: var(--muted);
+    letter-spacing: 0.5px;
+  }
+  .meta-block { text-align: right; }
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid rgba(255,77,109,0.4);
+    background: rgba(255,77,109,0.07);
+    padding: 5px 12px;
+    border-radius: 2px;
+    margin-bottom: 12px;
+  }
+  .meta-info { color: var(--dimmed); font-size: 11px; line-height: 1.9; }
+
+  /* SECTION HEADER */
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 28px;
+    margin-top: 60px;
+  }
+  .section-label:first-of-type { margin-top: 0; }
+  .section-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    color: var(--accent2);
+    text-transform: uppercase;
+    min-width: 28px;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.5px;
+  }
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, var(--border), transparent);
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px 32px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--accent2);
+  }
+  .card.red::before { background: var(--accent); }
+  .card.green::before { background: var(--accent3); }
+  .card.yellow::before { background: var(--accent4); }
+  .card:hover { border-color: #3a3a55; }
+
+  /* WORKFLOW */
+  .workflow {
+    display: flex;
+    gap: 0;
+    align-items: stretch;
+    margin-bottom: 16px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+  }
+  .wf-step {
+    flex: 1;
+    min-width: 130px;
+    position: relative;
+  }
+  .wf-step-inner {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-right: none;
+    padding: 20px 16px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    transition: background 0.3s;
+  }
+  .wf-step:last-child .wf-step-inner { border-right: 1px solid var(--border); }
+  .wf-step-inner:hover { background: #1c1c28; }
+  .wf-step-inner::after {
+    content: '→';
+    position: absolute;
+    right: -13px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--accent2);
+    font-size: 16px;
+    z-index: 2;
+    background: var(--bg);
+    padding: 2px;
+  }
+  .wf-step:last-child .wf-step-inner::after { display: none; }
+  .wf-num {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--dimmed);
+    text-transform: uppercase;
+  }
+  .wf-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+  }
+  .wf-sub { font-size: 10px; color: var(--muted); line-height: 1.5; }
+  .wf-step.active .wf-step-inner { border-color: var(--accent); }
+  .wf-step.active .wf-name { color: var(--accent); }
+
+  /* PROMPT BLOCK */
+  .prompt-block {
+    background: #0d0d14;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .prompt-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 18px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border);
+  }
+  .prompt-dots { display: flex; gap: 6px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #febc2e; }
+  .dot-g { background: #28c840; }
+  .prompt-label { font-size: 10px; letter-spacing: 2px; color: var(--dimmed); text-transform: uppercase; }
+  .prompt-body {
+    padding: 24px 28px;
+    font-size: 12.5px;
+    line-height: 1.9;
+    color: var(--muted);
+  }
+  .prompt-body .kw { color: var(--accent2); font-style: italic; }
+  .prompt-body .var { color: var(--accent3); }
+  .prompt-body .str { color: var(--accent4); }
+  .prompt-body .comment { color: var(--dimmed); }
+  .prompt-body .accent { color: var(--accent); font-weight: 400; }
+  .prompt-body p { margin-bottom: 10px; }
+  .prompt-body h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    margin: 20px 0 8px;
+    letter-spacing: 0.5px;
+  }
+
+  /* GRID LAYOUTS */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+  /* PLATFORM CARDS */
+  .platform-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 22px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .platform-card:hover { transform: translateY(-2px); }
+  .platform-header { display: flex; align-items: center; gap: 12px; }
+  .platform-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .platform-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+  }
+  .platform-api { font-size: 10px; color: var(--muted); letter-spacing: 0.5px; }
+  .platform-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag {
+    font-size: 10px;
+    padding: 3px 9px;
+    border-radius: 2px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .tag-purple { background: rgba(124,92,252,0.15); color: var(--accent2); border: 1px solid rgba(124,92,252,0.2); }
+  .tag-green  { background: rgba(0,212,170,0.1);  color: var(--accent3); border: 1px solid rgba(0,212,170,0.2); }
+  .tag-red    { background: rgba(255,77,109,0.1);  color: var(--accent);  border: 1px solid rgba(255,77,109,0.2); }
+  .tag-yellow { background: rgba(255,200,87,0.1);  color: var(--accent4); border: 1px solid rgba(255,200,87,0.2); }
+  .tag-blue   { background: rgba(56,189,248,0.1);  color: #38bdf8;        border: 1px solid rgba(56,189,248,0.2); }
+  .platform-note { font-size: 11px; color: var(--muted); line-height: 1.6; }
+  .free-badge {
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 2px;
+    background: rgba(0,212,170,0.12);
+    color: var(--accent3);
+    border: 1px solid rgba(0,212,170,0.25);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-left: auto;
+  }
+
+  /* SERVICE TABLE */
+  .svc-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 16px;
+  }
+  .svc-table th {
+    font-family: 'Syne', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--dimmed);
+    text-align: left;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .svc-table td {
+    padding: 13px 16px;
+    font-size: 12px;
+    border-bottom: 1px solid rgba(42,42,58,0.5);
+    vertical-align: top;
+    line-height: 1.6;
+  }
+  .svc-table tr:last-child td { border-bottom: none; }
+  .svc-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .svc-name { color: #fff; font-weight: 400; }
+  .svc-type { color: var(--muted); }
+  .svc-tier { }
+  .svc-use { color: var(--muted); font-size: 11px; }
+
+  /* SECURITY */
+  .security-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  .sec-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 18px 20px;
+  }
+  .sec-icon { font-size: 22px; margin-bottom: 10px; }
+  .sec-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .sec-desc { font-size: 11px; color: var(--muted); line-height: 1.6; }
+
+  /* ML PIPELINE */
+  .ml-flow {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .ml-node {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 18px;
+    flex: 1;
+    min-width: 140px;
+    text-align: center;
+  }
+  .ml-node-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .ml-node-sub { font-size: 10px; color: var(--muted); }
+  .ml-arrow { color: var(--accent2); font-size: 18px; flex-shrink: 0; }
+
+  /* FOOTER */
+  .footer {
+    margin-top: 80px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .footer-brand {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #fff 30%, var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -1px;
+  }
+  .footer-brand span { -webkit-text-fill-color: var(--accent); }
+  .footer-note { font-size: 10px; color: var(--dimmed); letter-spacing: 1px; text-transform: uppercase; }
+
+  /* IG gradient */
+  .ig-icon { background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+  .fb-icon { background: #1877f2; }
+  .li-icon { background: #0a66c2; }
+  .yt-icon { background: #ff0000; }
+  .x-icon  { background: #000; border: 1px solid #333; }
+
+  @media (max-width: 768px) {
+    .container { padding: 40px 20px 60px; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .security-grid { grid-template-columns: 1fr 1fr; }
+    .workflow { flex-direction: column; }
+    .wf-step-inner { border-right: 1px solid var(--border); border-bottom: none; }
+    .wf-step-inner::after { content: '↓'; right: 50%; top: auto; bottom: -14px; transform: translateX(50%); }
+  }
+</style>
+</head>
+<body>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo-block">
+      <div class="logo">Pre<span>socio</span></div>
+      <div class="tagline">AI-Powered Social Media Automation Platform</div>
+    </div>
+    <div class="meta-block">
+      <div class="badge">MVP Structured Prompt</div>
+      <div class="meta-info">
+        Version 1.0 — MVP Phase<br/>
+        Target: 5 Platforms<br/>
+        Architecture: AI-First, API-Driven
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 1: PRODUCT OVERVIEW -->
+  <div class="section-label">
+    <span class="section-num">01</span>
+    <span class="section-title">Product Overview & System Context</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="prompt-block">
+    <div class="prompt-topbar">
+      <div class="prompt-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span class="prompt-label">system_prompt.txt — Global Context</span>
+    </div>
+    <div class="prompt-body">
+      <p>You are the <span class="kw">Presocio AI Engine</span>, an enterprise-grade social media automation platform. Your role is to orchestrate end-to-end content workflows — from ideation to live posting — across <span class="var">Instagram, Facebook, LinkedIn, YouTube,</span> and <span class="var">X (Twitter)</span>.</p>
+      <p>You operate with the following core capabilities:</p>
+      <p>
+        <span class="accent">→</span> <span class="kw">Multimodal content generation</span> using LLM + computer vision for text, images, captions, and video scripts<br/>
+        <span class="accent">→</span> <span class="kw">Brand voice preservation</span> via a continuously learning brand-voice model per organisation<br/>
+        <span class="accent">→</span> <span class="kw">Predictive engagement scoring</span> using historical performance ML models<br/>
+        <span class="accent">→</span> <span class="kw">Platform-native optimisation</span> — format, hashtags, posting time, SEO, per-channel<br/>
+        <span class="accent">→</span> <span class="kw">Multi-account team collaboration</span> with role-based approval gates<br/>
+        <span class="accent">→</span> <span class="kw">Real-time feedback loops</span> that retrain content quality metrics continuously
+      </p>
+      <p>Always maintain brand consistency, follow platform API rate limits, respect content policies, and optimise for measurable engagement uplift. Every output must be <span class="str">brand-safe</span>, <span class="str">platform-compliant</span>, and <span class="str">performance-oriented</span>.</p>
+    </div>
+  </div>
+
+  <!-- SECTION 2: MVP WORKFLOW -->
+  <div class="section-label">
+    <span class="section-num">02</span>
+    <span class="section-title">MVP Workflow — 6-Stage Pipeline</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="workflow">
+    <div class="wf-step active">
+      <div class="wf-step-inner">
+        <div class="wf-num">01</div>
+        <div class="wf-name">User Input</div>
+        <div class="wf-sub">Brand brief, campaign goal, tone, target audience, media assets</div>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-step-inner">
+        <div class="wf-num">02</div>
+        <div class="wf-name">Content Planning</div>
+        <div class="wf-sub">AI ideation, content calendar, trend analysis, platform strategy</div>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-step-inner">
+        <div class="wf-num">03</div>
+        <div class="wf-name">Content Generation</div>
+        <div class="wf-sub">LLM copy, image/video gen, hashtag & SEO optimisation</div>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-step-inner">
+        <div class="wf-num">04</div>
+        <div class="wf-name">Content Scheduling</div>
+        <div class="wf-sub">Optimal time prediction, queue management, multi-platform sync</div>
+      </div>
+    </div>
+    <div class="wf-step active">
+      <div class="wf-step-inner">
+        <div class="wf-num">05</div>
+        <div class="wf-name">Approval</div>
+        <div class="wf-sub">Team review, brand-safety checks, compliance gate, edit & re-draft</div>
+      </div>
+    </div>
+    <div class="wf-step">
+      <div class="wf-step-inner">
+        <div class="wf-num">06</div>
+        <div class="wf-name">Posting</div>
+        <div class="wf-sub">Automated cross-platform publish via unified social API</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STAGE PROMPTS -->
+  <div class="prompt-block">
+    <div class="prompt-topbar">
+      <div class="prompt-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span class="prompt-label">stage_prompts.txt — Per-Stage AI Instructions</span>
+    </div>
+    <div class="prompt-body">
+
+      <h4>STAGE 1 — User Input Ingestion</h4>
+      <p><span class="comment">// Collect and structure all campaign parameters</span><br/>
+      Parse the following from user input: <span class="var">{brand_name}</span>, <span class="var">{campaign_objective}</span>, <span class="var">{target_audience}</span>, <span class="var">{content_tone}</span> [professional/casual/witty/inspirational], <span class="var">{key_messages}</span>, <span class="var">{visual_assets}</span> [uploaded images/videos], <span class="var">{platforms}</span> [Instagram/Facebook/LinkedIn/YouTube/X], <span class="var">{posting_frequency}</span>, <span class="var">{campaign_duration}</span>. Validate completeness. If any field is missing, request it explicitly before proceeding.</p>
+
+      <h4>STAGE 2 — Content Planning</h4>
+      <p><span class="comment">// Generate a data-driven content calendar</span><br/>
+      Using <span class="var">{brand_name}</span> profile and <span class="var">{campaign_objective}</span>, generate a <span class="var">{n}</span>-week content calendar. For each entry: suggest a content theme, format (text/image/video/carousel/reel/short), platform target, and trend angle aligned with current industry topics. Include 3 content pillars: <span class="str">Educational</span>, <span class="str">Promotional</span>, <span class="str">Community/Engagement</span>. Score each idea with a predicted engagement index based on historical data patterns.</p>
+
+      <h4>STAGE 3 — Content Generation</h4>
+      <p><span class="comment">// Produce platform-native, brand-consistent content</span><br/>
+      For each planned post, generate: (a) a primary caption adapted for <span class="var">{platform}</span> character limits and tone, (b) 3 copy variants ranked by predicted performance, (c) 15–25 hashtags split into: <span class="str">niche</span> (high relevance), <span class="str">mid-tier</span> (10K–500K posts), <span class="str">trending</span> (real-time), (d) SEO-optimised description for YouTube/LinkedIn, (e) image prompt for AI image generation or visual direction for uploaded assets, (f) brand-voice conformity score against stored <span class="var">{brand_voice_model}</span>.</p>
+
+      <h4>STAGE 4 — Scheduling Optimisation</h4>
+      <p><span class="comment">// Predict optimal posting windows</span><br/>
+      Using ML engagement prediction: recommend the top 3 posting time slots per <span class="var">{platform}</span> per <span class="var">{target_audience_timezone}</span>. Consider platform-specific peak windows, audience activity heatmaps, and competitor posting patterns. Output a final posting queue sorted by predicted reach. Detect and avoid scheduling conflicts or over-posting the same theme consecutively.</p>
+
+      <h4>STAGE 5 — Approval Workflow</h4>
+      <p><span class="comment">// Route content through team review with context</span><br/>
+      Present each post with: caption, visual, hashtags, predicted engagement score, platform, and scheduled time. Provide approval actions: <span class="accent">APPROVE</span> / <span class="accent">EDIT</span> / <span class="accent">REJECT</span> / <span class="accent">REGENERATE</span>. On EDIT, accept inline changes and re-score. On REJECT, request rejection reason and regenerate 2 alternative versions. Log all approval decisions with <span class="var">{reviewer_id}</span> and <span class="var">{timestamp}</span> for audit trail.</p>
+
+      <h4>STAGE 6 — Cross-Platform Posting</h4>
+      <p><span class="comment">// Execute publishing via unified API layer</span><br/>
+      On approval, trigger posting via <span class="kw">Ayrshare / Zernio unified API</span>. Format content per platform spec: Instagram (image/reel/carousel + caption ≤2200 chars), Facebook (post/video + link preview), LinkedIn (article/post + professional framing), YouTube (title/description/tags/thumbnail), X/Twitter (≤280 chars + thread if needed). Confirm publish status, capture post_id per platform, store analytics baseline. Flag any API errors for retry with exponential backoff.</p>
+    </div>
+  </div>
+
+  <!-- SECTION 3: SOCIAL MEDIA INTEGRATIONS -->
+  <div class="section-label">
+    <span class="section-num">03</span>
+    <span class="section-title">Social Platform Integrations</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="platform-card" style="border-color: rgba(220,39,67,0.3);">
+      <div class="platform-header">
+        <div class="platform-icon ig-icon">📷</div>
+        <div>
+          <div class="platform-name">Instagram</div>
+          <div class="platform-api">Meta Graph API v19+</div>
+        </div>
+        <span class="free-badge">Free</span>
+      </div>
+      <div class="platform-tags">
+        <span class="tag tag-purple">Feed Posts</span>
+        <span class="tag tag-red">Reels</span>
+        <span class="tag tag-green">Carousels</span>
+        <span class="tag tag-yellow">Stories</span>
+      </div>
+      <div class="platform-note">Requires Business/Creator account. App Review for publish_to_feed permission. 200 calls/hour rate limit. Supports image/video upload, caption, hashtags, location tagging. Use /media and /media_publish endpoints.</div>
+    </div>
+
+    <div class="platform-card" style="border-color: rgba(24,119,242,0.3);">
+      <div class="platform-header">
+        <div class="platform-icon fb-icon">📘</div>
+        <div>
+          <div class="platform-name">Facebook</div>
+          <div class="platform-api">Meta Graph API v19+ / Pages API</div>
+        </div>
+        <span class="free-badge">Free</span>
+      </div>
+      <div class="platform-tags">
+        <span class="tag tag-blue">Page Posts</span>
+        <span class="tag tag-purple">Videos</span>
+        <span class="tag tag-green">Link Previews</span>
+        <span class="tag tag-yellow">Scheduled</span>
+      </div>
+      <div class="platform-note">Use /page-id/feed endpoint for text + link posts. /page-id/videos for video upload. Requires pages_manage_posts permission. Shared OAuth with Instagram via Meta Business Suite.</div>
+    </div>
+
+    <div class="platform-card" style="border-color: rgba(10,102,194,0.3);">
+      <div class="platform-header">
+        <div class="platform-icon li-icon">💼</div>
+        <div>
+          <div class="platform-name">LinkedIn</div>
+          <div class="platform-api">LinkedIn Marketing API v2</div>
+        </div>
+        <span class="free-badge">Free</span>
+      </div>
+      <div class="platform-tags">
+        <span class="tag tag-blue">Company Posts</span>
+        <span class="tag tag-purple">Articles</span>
+        <span class="tag tag-green">Documents</span>
+        <span class="tag tag-yellow">Video</span>
+      </div>
+      <div class="platform-note">Use /ugcPosts endpoint for rich media. Requires r_organization_social + w_organization_social scopes. 100 posts/day limit per org. Supports polls, documents, articles via Share API.</div>
+    </div>
+
+    <div class="platform-card" style="border-color: rgba(255,0,0,0.3);">
+      <div class="platform-header">
+        <div class="platform-icon yt-icon">▶️</div>
+        <div>
+          <div class="platform-name">YouTube</div>
+          <div class="platform-api">YouTube Data API v3</div>
+        </div>
+        <span class="free-badge">Free</span>
+      </div>
+      <div class="platform-tags">
+        <span class="tag tag-red">Video Upload</span>
+        <span class="tag tag-purple">Shorts</span>
+        <span class="tag tag-green">Community</span>
+        <span class="tag tag-yellow">Thumbnails</span>
+      </div>
+      <div class="platform-note">10,000 quota units/day free. videos.insert for upload, playlistItems for management. Requires youtube.upload OAuth scope. AI-generate title, description, tags, chapters for SEO.</div>
+    </div>
+
+    <div class="platform-card" style="border-color: rgba(100,100,100,0.3); grid-column: span 2;">
+      <div class="platform-header">
+        <div class="platform-icon x-icon" style="font-size:16px; font-weight:bold; font-family:sans-serif; color:#fff;">𝕏</div>
+        <div>
+          <div class="platform-name">X (Twitter)</div>
+          <div class="platform-api">X API v2 — Free Tier</div>
+        </div>
+        <span class="free-badge">Free (limited)</span>
+      </div>
+      <div class="platform-tags">
+        <span class="tag tag-purple">Tweets</span>
+        <span class="tag tag-red">Threads</span>
+        <span class="tag tag-green">Media Upload</span>
+        <span class="tag tag-yellow">Polls</span>
+        <span class="tag tag-blue">⚠ 1500 posts/mo</span>
+      </div>
+      <div class="platform-note">X API free tier: write-only, 1,500 posts/month, 17 requests/24hr per user auth. For higher limits consider Basic ($100/mo). Auto-thread long content (≥280 chars). Use POST /2/tweets. OAuth 2.0 PKCE for user auth. <strong style="color:#ffc857">Recommended: route X posting via Ayrshare to manage limits.</strong></div>
+    </div>
+  </div>
+
+  <!-- UNIFIED API LAYER -->
+  <div class="section-label" style="margin-top:40px;">
+    <span class="section-num">03b</span>
+    <span class="section-title">Recommended Unified API Layer</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="card green">
+    <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:10px;">🔗 Ayrshare — Primary Unified Social API <span class="tag tag-green" style="margin-left:10px;">Free Plan Available</span></div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.8;">
+      Single REST API covering all 5 required platforms. Free tier includes basic posting to Instagram, Facebook, LinkedIn, YouTube, and X. Handles OAuth token management, rate-limit tracking, error retries, and post analytics. Python + Node.js SDKs. Source: <span style="color:var(--accent3)">ayrshare.com</span>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;margin-bottom:8px;">⚡ Zernio (Late API) — Alternative</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.7;">Developer-first unified scheduler. Single endpoint POST covers all platforms with scheduling. Supports webhooks for real-time status. Free tier available. Ideal for MVP prototyping.</div>
+    </div>
+    <div class="card">
+      <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:#fff;margin-bottom:8px;">📤 Upload-Post.com — Media-Heavy Alternative</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.7;">Best for video-heavy workflows. Auto-converts media to per-platform specs. n8n + Zapier integrations. Free tier, Python & JS SDKs. Used by 30K+ users.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 4: AI SERVICES -->
+  <div class="section-label">
+    <span class="section-num">04</span>
+    <span class="section-title">AI & LLM Service Stack</span>
+    <div class="section-line"></div>
+  </div>
+
+  <table class="svc-table" style="background:var(--card);border:1px solid var(--border);border-radius:4px;overflow:hidden;">
+    <thead>
+      <tr>
+        <th>Service</th>
+        <th>Type</th>
+        <th>Free Tier</th>
+        <th>Use in Presocio</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="svc-name">Google AI Studio<br/><span style="font-size:10px;color:var(--muted)">Gemini 2.5 Flash</span></td>
+        <td class="svc-type"><span class="tag tag-purple">LLM</span></td>
+        <td class="svc-tier"><span class="tag tag-green">1M tokens/min</span></td>
+        <td class="svc-use">Primary content generation, hashtag suggestions, caption variants, SEO descriptions, brand-voice scoring</td>
+      </tr>
+      <tr>
+        <td class="svc-name">Groq API<br/><span style="font-size:10px;color:var(--muted)">Llama 3.3 70B</span></td>
+        <td class="svc-type"><span class="tag tag-purple">LLM</span></td>
+        <td class="svc-tier"><span class="tag tag-green">300+ tok/sec free</span></td>
+        <td class="svc-use">Real-time content planning, fast ideation sprints, A/B copy variant generation at high speed</td>
+      </tr>
+      <tr>
+        <td class="svc-name">Hugging Face<br/><span style="font-size:10px;color:var(--muted)">Inference API</span></td>
+        <td class="svc-type"><span class="tag tag-blue">Computer Vision</span></td>
+        <td class="svc-tier"><span class="tag tag-green">300+ free models</span></td>
+        <td class="svc-use">Image classification, brand-consistency vision checks, auto-alt text generation, visual content scoring</td>
+      </tr>
+      <tr>
+        <td class="svc-name">Together AI<br/><span style="font-size:10px;color:var(--muted)">Llama 4 Scout</span></td>
+        <td class="svc-type"><span class="tag tag-purple">Multimodal LLM</span></td>
+        <td class="svc-tier"><span class="tag tag-yellow">$25 free credits</span></td>
+        <td class="svc-use">Image-aware content generation — analyse uploaded visuals and generate contextually accurate captions</td>
+      </tr>
+      <tr>
+        <td class="svc-name">Stable Diffusion (SDXL)<br/><span style="font-size:10px;color:var(--muted)">via Hugging Face</span></td>
+        <td class="svc-type"><span class="tag tag-red">Image Gen</span></td>
+        <td class="svc-tier"><span class="tag tag-green">Free (self-hosted)</span></td>
+        <td class="svc-use">AI image generation for posts from text prompts. Brand-themed visual creation without stock photos</td>
+      </tr>
+      <tr>
+        <td class="svc-name">Copy.ai / Simplified<br/><span style="font-size:10px;color:var(--muted)">Hashtag API</span></td>
+        <td class="svc-type"><span class="tag tag-yellow">Hashtag Engine</span></td>
+        <td class="svc-tier"><span class="tag tag-green">Free tier</span></td>
+        <td class="svc-use">Supplemental hashtag generation with trend data. Platform-specific hashtag sets: niche, mid, trending</td>
+      </tr>
+      <tr>
+        <td class="svc-name">Buffer AI Assistant<br/><span style="font-size:10px;color:var(--muted)">Scheduling Intelligence</span></td>
+        <td class="svc-type"><span class="tag tag-blue">Scheduling ML</span></td>
+        <td class="svc-tier"><span class="tag tag-green">Free plan</span></td>
+        <td class="svc-use">Optimal posting time recommendations, audience activity analysis, queue gap detection</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- SECTION 5: ML PIPELINE -->
+  <div class="section-label">
+    <span class="section-num">05</span>
+    <span class="section-title">Predictive ML & Learning Pipeline</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="ml-flow">
+    <div class="ml-node">
+      <div class="ml-node-title">Data Ingestion</div>
+      <div class="ml-node-sub">Post history, engagement metrics, audience signals</div>
+    </div>
+    <div class="ml-arrow">→</div>
+    <div class="ml-node">
+      <div class="ml-node-title">Feature Extraction</div>
+      <div class="ml-node-sub">Time, tone, format, hashtag set, topic cluster</div>
+    </div>
+    <div class="ml-arrow">→</div>
+    <div class="ml-node">
+      <div class="ml-node-title">Engagement Prediction</div>
+      <div class="ml-node-sub">XGBoost / LightGBM scoring per post</div>
+    </div>
+    <div class="ml-arrow">→</div>
+    <div class="ml-node">
+      <div class="ml-node-title">Brand Voice Model</div>
+      <div class="ml-node-sub">Fine-tuned embeddings per brand profile</div>
+    </div>
+    <div class="ml-arrow">→</div>
+    <div class="ml-node">
+      <div class="ml-node-title">Feedback Loop</div>
+      <div class="ml-node-sub">Live metrics → retrain pipeline weekly</div>
+    </div>
+  </div>
+
+  <div class="prompt-block">
+    <div class="prompt-topbar">
+      <div class="prompt-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span class="prompt-label">ml_prompt.txt — Predictive Engagement Instructions</span>
+    </div>
+    <div class="prompt-body">
+      <p><span class="comment">// Engagement prediction scoring prompt (injected at STAGE 3)</span></p>
+      <p>Analyse the following social media post for <span class="var">{platform}</span> targeting <span class="var">{audience_segment}</span>. Score it on a 0–100 engagement index considering: (1) hook strength in first 125 characters, (2) emotional resonance score, (3) CTA clarity, (4) hashtag relevance and diversity, (5) optimal post length for <span class="var">{platform}</span>, (6) brand-voice alignment with <span class="var">{brand_voice_profile}</span>. Return JSON: <span class="str">{ "engagement_score": int, "hook_score": int, "cta_score": int, "hashtag_score": int, "voice_score": int, "top_improvement": string }</span>.</p>
+      <p><span class="comment">// Continuous learning instruction</span></p>
+      <p>After each post's performance data is collected (likes, shares, comments, reach at 24h / 7d), update the brand's performance baseline. Identify the top-performing content pattern and weight similar future content higher. Flag underperforming content types for de-prioritisation. Retrain brand-voice embedding model monthly using approved + high-performing posts as positive training examples.</p>
+    </div>
+  </div>
+
+  <!-- SECTION 6: SECURITY & ARCHITECTURE -->
+  <div class="section-label">
+    <span class="section-num">06</span>
+    <span class="section-title">Security, Architecture & Scalability</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="security-grid">
+    <div class="sec-card">
+      <div class="sec-icon">🔐</div>
+      <div class="sec-title">OAuth 2.0 Token Management</div>
+      <div class="sec-desc">Per-platform encrypted token storage. Auto-refresh before expiry. Ayrshare handles multi-platform auth abstraction. Zero plaintext credentials.</div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-icon">🛡️</div>
+      <div class="sec-title">Role-Based Access Control</div>
+      <div class="sec-desc">Admin / Editor / Viewer roles. Approval gates require Editor+ privileges. Audit log for every action: create, edit, approve, publish, delete.</div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-icon">🔒</div>
+      <div class="sec-title">Data Encryption</div>
+      <div class="sec-desc">AES-256 at rest. TLS 1.3 in transit. Brand voice models stored per-tenant in isolated vector DB namespaces. GDPR-compliant data handling.</div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-icon">⚡</div>
+      <div class="sec-title">API Rate Limit Management</div>
+      <div class="sec-desc">Centralised rate-limit tracker. Exponential backoff on 429 errors. Per-platform quota monitoring dashboard. Alert on 80% quota consumption.</div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-icon">🌐</div>
+      <div class="sec-title">Multi-Tenant Architecture</div>
+      <div class="sec-desc">Each brand = isolated workspace. Shared AI infrastructure, isolated data stores. Horizontal scaling via stateless microservices. Docker + Kubernetes ready.</div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-icon">📱</div>
+      <div class="sec-title">Mobile-First UI</div>
+      <div class="sec-desc">Responsive dashboard with approval queue optimised for mobile. Push notifications for approval requests. PWA support for offline queue viewing.</div>
+    </div>
+  </div>
+
+  <!-- SECTION 7: MVP TECH STACK -->
+  <div class="section-label">
+    <span class="section-num">07</span>
+    <span class="section-title">Recommended MVP Technology Stack</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:16px;">Frontend</div>
+      <div style="font-size:12px;color:var(--muted);line-height:2;">
+        <span class="tag tag-purple" style="margin-right:8px;">Next.js 14</span> Mobile-first React framework<br/>
+        <span class="tag tag-blue" style="margin-right:8px;">Tailwind CSS</span> Utility-first styling<br/>
+        <span class="tag tag-green" style="margin-right:8px;">shadcn/ui</span> Accessible component library<br/>
+        <span class="tag tag-yellow" style="margin-right:8px;">Vercel</span> Edge deployment, CDN
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:16px;">Backend</div>
+      <div style="font-size:12px;color:var(--muted);line-height:2;">
+        <span class="tag tag-purple" style="margin-right:8px;">FastAPI (Python)</span> AI/ML microservices<br/>
+        <span class="tag tag-blue" style="margin-right:8px;">PostgreSQL</span> User/post/analytics data<br/>
+        <span class="tag tag-green" style="margin-right:8px;">Redis</span> Queue, caching, rate limits<br/>
+        <span class="tag tag-yellow" style="margin-right:8px;">Celery</span> Async scheduling workers
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:16px;">AI / ML Layer</div>
+      <div style="font-size:12px;color:var(--muted);line-height:2;">
+        <span class="tag tag-green" style="margin-right:8px;">Gemini API</span> Primary LLM (free)<br/>
+        <span class="tag tag-purple" style="margin-right:8px;">Groq</span> Fast inference (free)<br/>
+        <span class="tag tag-blue" style="margin-right:8px;">HuggingFace</span> Vision + embeddings<br/>
+        <span class="tag tag-yellow" style="margin-right:8px;">LangChain</span> Agent orchestration
+      </div>
+    </div>
+    <div class="card">
+      <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:#fff;margin-bottom:16px;">Social API Layer</div>
+      <div style="font-size:12px;color:var(--muted);line-height:2;">
+        <span class="tag tag-green" style="margin-right:8px;">Ayrshare</span> Unified posting API<br/>
+        <span class="tag tag-blue" style="margin-right:8px;">Meta Graph API</span> IG + FB direct<br/>
+        <span class="tag tag-purple" style="margin-right:8px;">LinkedIn API v2</span> Professional posts<br/>
+        <span class="tag tag-yellow" style="margin-right:8px;">YouTube Data v3</span> Video uploads
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 8: CONSTRAINTS -->
+  <div class="section-label">
+    <span class="section-num">08</span>
+    <span class="section-title">MVP Constraints & Success Metrics</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="prompt-block">
+    <div class="prompt-topbar">
+      <div class="prompt-dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+      <span class="prompt-label">constraints_and_kpis.txt</span>
+    </div>
+    <div class="prompt-body">
+      <h4>Platform Constraints to Respect at All Times</h4>
+      <p>
+        <span class="var">Instagram:</span> Caption ≤ 2,200 chars | Hashtags ≤ 30 | Image 1:1 / 4:5 / 16:9 | Reel ≤ 90s for max reach<br/>
+        <span class="var">Facebook:</span> Post ≤ 63,206 chars | 1 link preview auto-generated | Video ≤ 240 min<br/>
+        <span class="var">LinkedIn:</span> Post ≤ 3,000 chars | Article via Editor API | Hashtags ≤ 5 recommended<br/>
+        <span class="var">YouTube:</span> Title ≤ 100 chars | Description ≤ 5,000 | Tags ≤ 500 chars | Thumbnail 1280×720px<br/>
+        <span class="var">X/Twitter:</span> Tweet ≤ 280 chars | Thread up to 25 tweets | 4 images or 1 video per tweet<br/>
+        <span class="accent">→</span> Never exceed limits. Auto-truncate with ellipsis or split into threads.
+      </p>
+      <h4>MVP Success KPIs</h4>
+      <p>
+        <span class="str">Productivity:</span> Reduce content creation time by ≥60% vs manual workflows<br/>
+        <span class="str">Quality:</span> Brand-voice conformity score ≥ 85/100 on all approved posts<br/>
+        <span class="str">Performance:</span> Average engagement rate +20% uplift vs pre-Presocio baseline within 60 days<br/>
+        <span class="str">Adoption:</span> Approval turnaround time ≤ 2 hours for 80% of queued posts<br/>
+        <span class="str">Reliability:</span> 99.5% posting success rate | ≤ 3 API retries per failed post<br/>
+        <span class="str">Security:</span> Zero credential exposure events | 100% audit log coverage
+      </p>
+      <h4>Out of Scope for MVP</h4>
+      <p>
+        <span class="comment">// Defer to v2: TikTok, Pinterest, Threads, Google Business Profile, paid ad management, custom ML model training UI, white-label reseller mode, CRM integrations, influencer outreach module.</span>
+      </p>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div>
+      <div class="footer-brand">Pre<span>socio</span></div>
+      <div class="footer-note" style="margin-top:6px;">MVP Structured Prompt — v1.0</div>
+    </div>
+    <div style="text-align:right;">
+      <div class="footer-note">AI Stack: Gemini · Groq · HuggingFace · Together AI</div>
+      <div class="footer-note" style="margin-top:4px;">Social APIs: Ayrshare · Meta Graph · LinkedIn v2 · YouTube Data v3 · X API v2</div>
+      <div class="footer-note" style="margin-top:4px;">Platforms: Instagram · Facebook · LinkedIn · YouTube · X</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
