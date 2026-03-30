@@ -19,7 +19,8 @@ import {
   Calendar as CalendarIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useWorkflowStore } from '@/store';
+import { useWorkflowStore, useMockDataStore } from '@/store';
+import { getMockCalendarPosts } from '@/lib/mock-data';
 import type { Platform, ContentFormat } from '@/types';
 
 const platformIcons: Record<Platform, React.ElementType> = {
@@ -67,6 +68,7 @@ interface CalendarPost {
 
 export function Calendar() {
   const { generatedPosts, postingQueue } = useWorkflowStore();
+  const { mockDataEnabled } = useMockDataStore();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'month' | 'list'>('month');
   const [filterPlatform, setFilterPlatform] = useState<Platform | 'all'>('all');
@@ -81,8 +83,18 @@ export function Calendar() {
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
   const goToday = () => setCurrentDate(new Date());
 
-  // Build calendar posts from real workflow data
+  // Build calendar posts — use mock data when toggle is on
   const calendarPosts = useMemo<CalendarPost[]>(() => {
+    if (mockDataEnabled) {
+      return getMockCalendarPosts().map((p) => ({
+        id: p.id,
+        platform: p.platform,
+        caption: p.caption,
+        scheduledDate: p.scheduledDate,
+        status: p.status,
+      }));
+    }
+
     const posts: CalendarPost[] = [];
 
     // Add posts from postingQueue (scheduled/published)
@@ -112,7 +124,7 @@ export function Calendar() {
       });
 
     return posts;
-  }, [generatedPosts, postingQueue]);
+  }, [generatedPosts, postingQueue, mockDataEnabled]);
 
   const filteredPosts = useMemo(() => {
     return calendarPosts.filter((p) => {

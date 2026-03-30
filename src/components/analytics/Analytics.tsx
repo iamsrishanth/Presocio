@@ -21,7 +21,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useWorkflowStore } from '@/store';
+import { useWorkflowStore, useMockDataStore } from '@/store';
+import { getMockAnalytics } from '@/lib/mock-data';
 import type { Platform } from '@/types';
 
 const platformIcons: Record<Platform, React.ElementType> = {
@@ -77,9 +78,28 @@ function EngagementRing({ value, label, color }: { value: number; label: string;
 
 export function Analytics() {
   const { generatedPosts, postingQueue } = useWorkflowStore();
+  const { mockDataEnabled } = useMockDataStore();
 
-  // Derive all analytics from real workflow data
+  // Derive all analytics — use mock data when toggle is on
   const analytics = useMemo(() => {
+    if (mockDataEnabled) {
+      const mock = getMockAnalytics();
+      return {
+        totalPosts: mock.totalPosts,
+        publishedCount: Math.round(mock.totalPosts * 0.8),
+        avgEngagement: mock.avgEngagement,
+        avgHook: mock.avgHook,
+        avgCta: mock.avgCta,
+        avgHashtag: mock.avgHashtag,
+        avgVoice: mock.avgVoice,
+        estimatedReach: mock.estimatedReach,
+        estimatedComments: mock.estimatedComments,
+        weeklyData: mock.weeklyData,
+        platformStats: mock.platformStats,
+        topPosts: mock.topPosts,
+      };
+    }
+
     const platforms: Platform[] = ['instagram', 'facebook', 'linkedin', 'youtube', 'x'];
     const totalPosts = generatedPosts.length;
     const publishedCount = postingQueue.filter((q) => q.status === 'published').length;
@@ -171,7 +191,7 @@ export function Analytics() {
       platformStats,
       topPosts,
     };
-  }, [generatedPosts, postingQueue]);
+  }, [generatedPosts, postingQueue, mockDataEnabled]);
 
   const overviewStats = [
     {

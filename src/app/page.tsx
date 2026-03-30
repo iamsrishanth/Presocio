@@ -14,9 +14,10 @@ import {
   User,
   ChevronRight,
   Zap,
+  Beaker,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useWorkflowStore, useUIStore } from '@/store';
+import { useWorkflowStore, useUIStore, useMockDataStore } from '@/store';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Workflow } from '@/components/workflow/Workflow';
 import { Dashboard } from '@/components/dashboard/Dashboard';
@@ -42,6 +43,7 @@ const navItems = [
 export default function HomePage() {
   const { currentStage, setCurrentStage, resetWorkflow } = useWorkflowStore();
   const { sidebarOpen, toggleSidebar } = useUIStore();
+  const { mockDataEnabled } = useMockDataStore();
   const [activeNav, setActiveNav] = useState('dashboard');
   const [showWorkflow, setShowWorkflow] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -300,6 +302,15 @@ export default function HomePage() {
             </div>
           </div>
         </header>
+
+        {/* Mock Data Banner */}
+        {mockDataEnabled && (
+          <div className="px-4 lg:px-8 py-2 bg-accent2/10 border-b border-accent2/20 flex items-center gap-2">
+            <Beaker className="w-4 h-4 text-accent2 flex-shrink-0" />
+            <span className="text-xs text-accent2 font-semibold">Simulated Data Mode</span>
+            <span className="text-xs text-muted">— showing mock data across all views</span>
+          </div>
+        )}
 
         {/* Content area with responsive padding */}
         <div className="p-4 lg:p-8">

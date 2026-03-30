@@ -169,6 +169,29 @@ if (typeof window !== 'undefined') {
   });
 }
 
+// ── Mock Data Toggle ──────────────────────────────────────────────
+
+interface MockDataState {
+  mockDataEnabled: boolean;
+  toggleMockData: () => void;
+  setMockDataEnabled: (enabled: boolean) => void;
+}
+
+export const useMockDataStore = create<MockDataState>()(
+  persist(
+    (set) => ({
+      mockDataEnabled: false,
+      toggleMockData: () => set((state) => ({ mockDataEnabled: !state.mockDataEnabled })),
+      setMockDataEnabled: (enabled) => set({ mockDataEnabled: enabled }),
+    }),
+    {
+      name: 'presocio-mock-data',
+    }
+  )
+);
+
+// ── Analytics ─────────────────────────────────────────────────────
+
 interface AnalyticsState {
   totalPosts: number;
   scheduledPosts: number;

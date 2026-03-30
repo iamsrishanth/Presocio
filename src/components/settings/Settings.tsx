@@ -24,10 +24,14 @@ import {
   Loader2,
   AlertCircle,
   RefreshCw,
+  Database,
+  Beaker,
+  Info,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Platform, ContentTone } from '@/types';
-import { useThemeStore, type ThemeMode } from '@/store';
+import { useThemeStore, useMockDataStore, type ThemeMode } from '@/store';
+import { getMockConnectedAccounts } from '@/lib/mock-data';
 
 const platformIcons: Record<Platform, React.ElementType> = {
   instagram: Camera,
@@ -62,7 +66,7 @@ const ZERNIO_PLATFORM_MAP: Record<string, Platform> = {
   twitter: 'x',
 };
 
-type SettingsTab = 'profile' | 'platforms' | 'api' | 'notifications' | 'appearance';
+type SettingsTab = 'profile' | 'platforms' | 'api' | 'notifications' | 'appearance' | 'data';
 
 const tabs: { id: SettingsTab; label: string; icon: React.ElementType }[] = [
   { id: 'profile', label: 'Profile', icon: User },
@@ -70,6 +74,7 @@ const tabs: { id: SettingsTab; label: string; icon: React.ElementType }[] = [
   { id: 'api', label: 'API Keys', icon: Key },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'appearance', label: 'Appearance', icon: Palette },
+  { id: 'data', label: 'Data', icon: Database },
 ];
 
 interface ConnectedAccount {
@@ -102,6 +107,9 @@ export function Settings() {
 
   // Appearance state — uses global theme store
   const { theme, setTheme } = useThemeStore();
+
+  // Mock data toggle
+  const { mockDataEnabled, toggleMockData } = useMockDataStore();
 
   // Platform connections state
   const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>([]);
@@ -313,18 +321,25 @@ export function Settings() {
         );
 
       case 'platforms':
+        // Use mock connected accounts when mock data is enabled
+        const displayAccounts = mockDataEnabled ? getMockConnectedAccounts() : connectedAccounts;
+        const displayDemoMode = mockDataEnabled ? false : isDemoMode;
+        const displayLoading = mockDataEnabled ? false : isLoadingAccounts;
+
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-syne font-bold text-sm text-text mb-1">Connected Platforms</h3>
                 <p className="text-xs text-muted">
-                  {isDemoMode
+                  {mockDataEnabled
+                    ? 'Showing simulated connected accounts'
+                    : displayDemoMode
                     ? 'Configure ZERNIO_API_KEY in .env.local to connect your social accounts'
                     : 'Manage your social media account connections via Zernio'}
                 </p>
               </div>
-              {!isDemoMode && (
+              {!displayDemoMode && !mockDataEnabled && (
                 <button
                   onClick={fetchAccounts}
                   disabled={isLoadingAccounts}
@@ -336,7 +351,20 @@ export function Settings() {
               )}
             </div>
 
-            {isDemoMode && (
+            {mockDataEnabled && (
+              <div className="glass-card p-4 flex items-start gap-3 border border-accent2/20 bg-accent2/5">
+                <Beaker className="w-5 h-5 text-accent2 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-syne font-semibold text-sm text-text">Simulated Data Mode</h4>
+                  <p className="text-xs text-muted mt-1">
+                    These are mock connected accounts for demo purposes. Toggle off in{' '}
+                    <span className="text-accent2 font-semibold">Settings → Data</span> to use real accounts.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {displayDemoMode && (
               <div className="glass-card p-4 flex items-start gap-3 border border-yellow-500/20 bg-yellow-500/5">
                 <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
                 <div>
@@ -353,7 +381,7 @@ export function Settings() {
               </div>
             )}
 
-            {accountsError && (
+            {accountsError && !mockDataEnabled && (
               <div className="glass-card p-4 flex items-start gap-3 border border-red-500/20 bg-red-500/5">
                 <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                 <div>
@@ -363,7 +391,7 @@ export function Settings() {
               </div>
             )}
 
-            {isLoadingAccounts ? (
+            {displayLoading ? (
               <div className="glass-card p-8 flex items-center justify-center">
                 <Loader2 className="w-6 h-6 text-accent2 animate-spin" />
                 <span className="ml-3 text-sm text-muted">Loading accounts...</span>
@@ -371,7 +399,7 @@ export function Settings() {
             ) : (
               allPlatforms.map((platform) => {
                 const Icon = platformIcons[platform];
-                const connection = connectedAccounts.find((a) => a.platform === platform);
+                const connection = displayAccounts.find((a) => a.platform === platform);
                 const isConnected = !!connection;
                 const connecting = isConnecting === platform;
 
@@ -409,11 +437,11 @@ export function Settings() {
                     </div>
                     <button
                       onClick={() => handleConnect(platform)}
-                      disabled={connecting || isDemoMode}
+                      disabled={connecting || displayDemoMode || mockDataEnabled}
                       className={cn(
                         'btn-secondary text-xs py-2 px-4 flex items-center gap-1.5',
-                        !isConnected && !isDemoMode && 'btn-primary',
-                        (connecting || isDemoMode) && 'opacity-50 cursor-not-allowed'
+                        !isConnected && !displayDemoMode && !mockDataEnabled && 'btn-primary',
+                        (connecting || displayDemoMode || mockDataEnabled) && 'opacity-50 cursor-not-allowed'
                       )}
                     >
                       {connecting ? (
@@ -568,6 +596,104 @@ GEMINI_MODEL=gemini-3-flash-preview`}
                 ))}
               </div>
             </div>
+          </div>
+        );
+
+      case 'data':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="font-syne font-bold text-sm text-text mb-1">Data Settings</h3>
+              <p className="text-xs text-muted mb-4">Control how data is displayed across the app</p>
+            </div>
+
+            {/* Mock Data Toggle */}
+            <div className="glass-card p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    'w-10 h-10 rounded-lg flex items-center justify-center',
+                    mockDataEnabled ? 'bg-accent2/10' : 'bg-surface'
+                  )}>
+                    <Beaker className={cn('w-5 h-5', mockDataEnabled ? 'text-accent2' : 'text-muted')} />
+                  </div>
+                  <div>
+                    <h4 className="font-syne font-semibold text-sm text-text">Simulated Data Mode</h4>
+                    <p className="text-xs text-muted mt-0.5">
+                      Show realistic mock data instead of live data across all views
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={toggleMockData}
+                  className={cn(
+                    'w-11 h-6 rounded-full transition-colors relative',
+                    mockDataEnabled ? 'bg-accent2' : 'bg-surface'
+                  )}
+                >
+                  <div className={cn(
+                    'w-5 h-5 rounded-full bg-white absolute top-0.5 transition-transform shadow',
+                    mockDataEnabled ? 'translate-x-[22px]' : 'translate-x-0.5'
+                  )} />
+                </button>
+              </div>
+
+              {mockDataEnabled && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  className="mt-4 p-3 rounded-lg bg-accent2/5 border border-accent2/20"
+                >
+                  <div className="flex items-start gap-2">
+                    <Info className="w-4 h-4 text-accent2 flex-shrink-0 mt-0.5" />
+                    <div className="text-xs text-muted space-y-1">
+                      <p>Simulated data is currently <span className="text-accent2 font-semibold">active</span>. The following views show mock data:</p>
+                      <ul className="list-disc list-inside ml-1 space-y-0.5">
+                        <li>Dashboard — stats, platform cards, connections</li>
+                        <li>Analytics — engagement charts, top posts, scores</li>
+                        <li>Calendar — scheduled and published posts</li>
+                        <li>Settings → Platforms — connected accounts</li>
+                      </ul>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </div>
+
+            {/* Info Card */}
+            <div className="glass-card p-5 space-y-3">
+              <h4 className="font-syne font-semibold text-sm text-text">About Simulated Data</h4>
+              <p className="text-xs text-muted">
+                When enabled, Presocio displays realistic simulated data throughout the app. This is useful for:
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { title: 'Demos', desc: 'Show a fully populated dashboard to clients or stakeholders' },
+                  { title: 'Testing', desc: 'Explore all features without connecting real social accounts' },
+                  { title: 'Screenshots', desc: 'Capture marketing materials with realistic content' },
+                  { title: 'Onboarding', desc: 'Let new users see what a mature account looks like' },
+                ].map((item) => (
+                  <div key={item.title} className="p-3 rounded-lg bg-surface/50">
+                    <div className="font-syne font-semibold text-xs text-text">{item.title}</div>
+                    <div className="text-[10px] text-muted mt-1">{item.desc}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Reset Warning */}
+            {mockDataEnabled && (
+              <div className="glass-card p-4 flex items-start gap-3 border border-yellow-500/20 bg-yellow-500/5">
+                <AlertCircle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-syne font-semibold text-sm text-text">Note</h4>
+                  <p className="text-xs text-muted mt-1">
+                    Toggling off simulated data will restore your real workflow data, analytics, and connected accounts.
+                    No data is lost — the toggle only controls what is <em>displayed</em>.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         );
     }
