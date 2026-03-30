@@ -190,31 +190,48 @@ export default function HomePage() {
 
       {/* Sidebar - hidden on mobile by default */}
       <aside className={cn(
-        'fixed left-0 top-0 h-full glass-dark z-50 transition-all duration-300',
+        'fixed left-0 top-0 h-full glass-dark z-50 transition-all duration-300 flex flex-col',
         // Mobile: hidden by default, slides in when open
-        'w-64 -translate-x-full lg:translate-x-0 lg:w-20',
+        'w-64 -translate-x-full lg:translate-x-0',
+        // Desktop: width follows sidebarOpen state
+        sidebarOpen ? 'lg:w-56' : 'lg:w-20',
         sidebarOpen && 'translate-x-0'
       )}>
-        <div className="p-3 lg:p-4 flex items-center justify-between border-b border-border">
-          <div className={cn('flex items-center gap-3', !sidebarOpen && 'justify-center w-full')}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent2 to-accent flex items-center justify-center flex-shrink-0">
-              <span className="text-white font-syne font-bold text-lg">P</span>
-            </div>
-            {sidebarOpen && (
-              <div>
+        {/* Logo */}
+        <div className={cn(
+          'p-4 flex items-center border-b border-border',
+          sidebarOpen ? 'justify-between' : 'justify-center'
+        )}>
+          {sidebarOpen ? (
+            <>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent2 to-accent flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-syne font-bold text-lg">P</span>
+                </div>
                 <div className="font-syne font-bold text-lg gradient-text whitespace-nowrap">Pre<span className="text-accent">socio</span></div>
               </div>
-            )}
-          </div>
-          <button
-            onClick={toggleSidebar}
-            className="p-2 rounded-lg hover:bg-surface transition-colors text-muted hover:text-text"
-          >
-            {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+              <button
+                onClick={toggleSidebar}
+                className="p-2 rounded-lg hover:bg-surface transition-colors text-muted hover:text-text"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={toggleSidebar}
+              className="p-2 rounded-lg hover:bg-surface transition-colors text-muted hover:text-text"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
-        <nav className="p-2 lg:p-4 space-y-1">
+        {/* Nav */}
+        <nav className={cn(
+          'flex-1 p-2 space-y-1',
+          sidebarOpen && 'lg:p-3'
+        )}>
           {navItems.map((item) => (
             <button
               key={item.id}
@@ -229,7 +246,10 @@ export default function HomePage() {
                 }
               }}
               className={cn(
-                'w-full flex items-center gap-3 px-3 lg:px-4 py-3 rounded-lg transition-all min-h-[48px]', // Touch-friendly 48px
+                'w-full rounded-lg transition-all min-h-[48px]',
+                sidebarOpen
+                  ? 'flex items-center gap-3 px-3 py-3'
+                  : 'flex items-center justify-center px-2 py-3',
                 activeNav === item.id && !showWorkflow
                   ? 'bg-accent2/10 text-accent2 border border-accent2/20'
                   : 'text-muted hover:text-text hover:bg-surface'
@@ -243,8 +263,12 @@ export default function HomePage() {
           ))}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-3 lg:p-4 border-t border-border">
-          <div className={cn('flex items-center gap-3', !sidebarOpen && 'justify-center')}>
+        {/* User */}
+        <div className="p-3 border-t border-border">
+          <div className={cn(
+            'flex items-center',
+            sidebarOpen ? 'gap-3' : 'justify-center'
+          )}>
             <div className="w-10 h-10 rounded-full bg-surface flex items-center justify-center flex-shrink-0">
               <User className="w-5 h-5 text-muted" />
             </div>
@@ -261,8 +285,8 @@ export default function HomePage() {
       {/* Main content */}
       <main className={cn(
         'flex-1 transition-all duration-300 w-full',
-        // Mobile: no margin, desktop: margin based on sidebar
-        'lg:ml-20'
+        // Mobile: no margin, desktop: margin based on sidebar width
+        sidebarOpen ? 'lg:ml-56' : 'lg:ml-20'
       )}>
         {/* Mobile header with hamburger */}
         <header className="sticky top-0 z-30 glass-dark border-b border-border">
