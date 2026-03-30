@@ -120,35 +120,36 @@ export default function HomePage() {
     switch (activeNav) {
       case 'create':
         return (
-          <div className="space-y-8">
-            <div className="glass-card p-12 text-center">
-              <div className="w-20 h-20 rounded-2xl bg-accent2/10 flex items-center justify-center mx-auto mb-6">
-                <Sparkles className="w-10 h-10 text-accent2" />
+          <div className="space-y-6 lg:space-y-8">
+            <div className="glass-card p-6 lg:p-12 text-center">
+              <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-2xl bg-accent2/10 flex items-center justify-center mx-auto mb-4 lg:mb-6">
+                <Sparkles className="w-8 h-8 lg:w-10 lg:h-10 text-accent2" />
               </div>
-              <h2 className="font-syne font-bold text-2xl text-text mb-3">
+              <h2 className="font-syne font-bold text-xl lg:text-2xl text-text mb-2 lg:mb-3">
                 Create New Campaign
               </h2>
-              <p className="text-muted max-w-lg mx-auto mb-8">
+              <p className="text-muted max-w-lg mx-auto mb-6 lg:mb-8 text-sm lg:text-base">
                 Start your AI-powered content creation workflow. Our 6-stage pipeline 
                 will guide you from brief to published posts across all platforms.
               </p>
-              <button onClick={handleStartCreate} className="btn-primary inline-flex items-center gap-2 text-lg px-8 py-4">
+              <button onClick={handleStartCreate} className="btn-primary inline-flex items-center gap-2 text-base lg:text-lg px-6 lg:px-8 py-3 lg:py-4 min-h-[48px]">
                 <Zap className="w-5 h-5" />
                 Start Creating
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            {/* Responsive grid: 1 column on mobile, 3 on desktop */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
                 { title: 'AI Generation', desc: 'Gemini 2.0 Flash + Llama 3.3', icon: '🤖' },
                 { title: 'Brand Voice', desc: 'Consistent tone across posts', icon: '🎯' },
                 { title: 'Multi-Platform', desc: '5 social platforms covered', icon: '📱' },
               ].map((feature) => (
-                <div key={feature.title} className="glass-card p-6 text-center">
-                  <div className="text-3xl mb-3">{feature.icon}</div>
+                <div key={feature.title} className="glass-card p-4 lg:p-6 text-center">
+                  <div className="text-2xl lg:text-3xl mb-2 lg:mb-3">{feature.icon}</div>
                   <h3 className="font-syne font-bold text-sm text-text mb-1">{feature.title}</h3>
-                  <p className="text-xs text-muted">{feature.desc}</p>
+                  <p className="text-xs lg:text-sm text-muted">{feature.desc}</p>
                 </div>
               ))}
             </div>
@@ -172,18 +173,34 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen flex">
+      {/* Mobile overlay */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={toggleSidebar}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar - hidden on mobile by default */}
       <aside className={cn(
-        'fixed left-0 top-0 h-full glass-dark z-40 transition-all duration-300',
-        sidebarOpen ? 'w-64' : 'w-20'
+        'fixed left-0 top-0 h-full glass-dark z-50 transition-all duration-300',
+        // Mobile: hidden by default, slides in when open
+        'w-64 -translate-x-full lg:translate-x-0 lg:w-20',
+        sidebarOpen && 'translate-x-0'
       )}>
-        <div className="p-4 flex items-center justify-between border-b border-border">
+        <div className="p-3 lg:p-4 flex items-center justify-between border-b border-border">
           <div className={cn('flex items-center gap-3', !sidebarOpen && 'justify-center w-full')}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent2 to-accent flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent2 to-accent flex items-center justify-center flex-shrink-0">
               <span className="text-white font-syne font-bold text-lg">P</span>
             </div>
             {sidebarOpen && (
               <div>
-                <div className="font-syne font-bold text-lg gradient-text">Pre<span className="text-accent">socio</span></div>
+                <div className="font-syne font-bold text-lg gradient-text whitespace-nowrap">Pre<span className="text-accent">socio</span></div>
               </div>
             )}
           </div>
@@ -195,7 +212,7 @@ export default function HomePage() {
           </button>
         </div>
 
-        <nav className="p-4 space-y-2">
+        <nav className="p-2 lg:p-4 space-y-1">
           {navItems.map((item) => (
             <button
               key={item.id}
@@ -204,9 +221,13 @@ export default function HomePage() {
                 if (item.id !== 'create') {
                   setShowWorkflow(false);
                 }
+                // Close sidebar on mobile after selection
+                if (window.innerWidth < 1024) {
+                  toggleSidebar();
+                }
               }}
               className={cn(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all',
+                'w-full flex items-center gap-3 px-3 lg:px-4 py-3 rounded-lg transition-all min-h-[48px]', // Touch-friendly 48px
                 activeNav === item.id && !showWorkflow
                   ? 'bg-accent2/10 text-accent2 border border-accent2/20'
                   : 'text-muted hover:text-text hover:bg-surface'
@@ -214,20 +235,20 @@ export default function HomePage() {
             >
               <item.icon className="w-5 h-5 flex-shrink-0" />
               {sidebarOpen && (
-                <span className="font-syne font-semibold text-sm">{item.label}</span>
+                <span className="font-syne font-semibold text-sm whitespace-nowrap">{item.label}</span>
               )}
             </button>
           ))}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
+        <div className="absolute bottom-0 left-0 right-0 p-3 lg:p-4 border-t border-border">
           <div className={cn('flex items-center gap-3', !sidebarOpen && 'justify-center')}>
-            <div className="w-10 h-10 rounded-full bg-surface flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-surface flex items-center justify-center flex-shrink-0">
               <User className="w-5 h-5 text-muted" />
             </div>
             {sidebarOpen && (
               <div>
-                <div className="font-syne font-semibold text-sm text-text">Demo User</div>
+                <div className="font-syne font-semibold text-sm text-text whitespace-nowrap">Demo User</div>
                 <div className="text-xs text-muted">Admin</div>
               </div>
             )}
@@ -235,32 +256,44 @@ export default function HomePage() {
         </div>
       </aside>
 
+      {/* Main content */}
       <main className={cn(
-        'flex-1 transition-all duration-300',
-        sidebarOpen ? 'ml-64' : 'ml-20'
+        'flex-1 transition-all duration-300 w-full',
+        // Mobile: no margin, desktop: margin based on sidebar
+        'lg:ml-20'
       )}>
+        {/* Mobile header with hamburger */}
         <header className="sticky top-0 z-30 glass-dark border-b border-border">
-          <div className="px-8 py-4 flex items-center justify-between">
-            <div>
-              <h1 className="font-syne font-bold text-xl text-text">
-                {showWorkflow ? (
-                  <span className="gradient-text">
-                    {currentStage.charAt(0).toUpperCase() + currentStage.slice(1)} Stage
-                  </span>
-                ) : (
-                  navItems.find((n) => n.id === activeNav)?.label || 'Dashboard'
-                )}
-              </h1>
-              <p className="text-sm text-muted">
-                {showWorkflow 
-                  ? `Step ${stages.indexOf(currentStage) + 1} of ${stages.length}`
-                  : 'Manage your social media presence'
-                }
-              </p>
+          <div className="px-4 lg:px-8 py-3 lg:py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {/* Mobile hamburger - visible only on mobile */}
+              <button
+                onClick={toggleSidebar}
+                className="p-2 rounded-lg hover:bg-surface transition-colors text-muted hover:text-text lg:hidden"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+              <div>
+                <h1 className="font-syne font-bold text-lg lg:text-xl text-text">
+                  {showWorkflow ? (
+                    <span className="gradient-text">
+                      {currentStage.charAt(0).toUpperCase() + currentStage.slice(1)} Stage
+                    </span>
+                  ) : (
+                    navItems.find((n) => n.id === activeNav)?.label || 'Dashboard'
+                  )}
+                </h1>
+                <p className="text-xs lg:text-sm text-muted">
+                  {showWorkflow 
+                    ? `Step ${stages.indexOf(currentStage) + 1} of ${stages.length}`
+                    : 'Manage your social media presence'
+                  }
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <ThemeToggle />
-              <button className="relative p-2 rounded-lg hover:bg-surface transition-colors text-muted hover:text-text">
+              <button className="relative p-2 rounded-lg hover:bg-surface transition-colors text-muted hover:text-text min-w-[44px] min-h-[44px] flex items-center justify-center">
                 <Bell className="w-5 h-5" />
                 <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-accent" />
               </button>
@@ -268,7 +301,8 @@ export default function HomePage() {
           </div>
         </header>
 
-        <div className="p-8">
+        {/* Content area with responsive padding */}
+        <div className="p-4 lg:p-8">
           {renderContent()}
         </div>
       </main>

@@ -86,6 +86,7 @@ interface UIState {
   generationProgress: number;
 
   toggleSidebar: () => void;
+  setSidebarOpen: (open: boolean) => void;
   setActiveModal: (modal: string | null) => void;
   setSelectedPlatforms: (platforms: Platform[]) => void;
   setIsGenerating: (generating: boolean) => void;
@@ -93,13 +94,15 @@ interface UIState {
 }
 
 export const useUIStore = create<UIState>((set) => ({
-  sidebarOpen: true,
+  // Start with sidebar closed on mobile (default), open on desktop
+  sidebarOpen: typeof window !== 'undefined' && window.innerWidth >= 1024,
   activeModal: null,
   selectedPlatforms: ['instagram', 'facebook', 'linkedin', 'youtube', 'x'],
   isGenerating: false,
   generationProgress: 0,
 
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
+  setSidebarOpen: (open) => set({ sidebarOpen: open }),
   setActiveModal: (modal) => set({ activeModal: modal }),
   setSelectedPlatforms: (platforms) => set({ selectedPlatforms: platforms }),
   setIsGenerating: (generating) => set({ isGenerating: generating }),

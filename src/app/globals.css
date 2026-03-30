@@ -212,6 +212,7 @@ html.light ::selection {
     background: linear-gradient(135deg, var(--accent2), var(--accent));
     color: #fff;
     box-shadow: 0 4px 15px var(--btn-glow);
+    min-height: 44px;
   }
 
   .btn-primary:hover {
@@ -224,6 +225,7 @@ html.light ::selection {
     background: transparent;
     border-color: var(--border);
     color: var(--text);
+    min-height: 44px;
   }
 
   .btn-secondary:hover {
@@ -237,6 +239,7 @@ html.light ::selection {
     border-color: var(--border);
     color: var(--text);
     font-family: 'DM Mono', monospace;
+    min-height: 48px;
   }
 
   .input-field:focus {
@@ -281,6 +284,74 @@ html.light ::selection {
     background: rgba(56, 189, 248, 0.1);
     color: #38bdf8;
     border: 1px solid rgba(56, 189, 248, 0.2);
+  }
+}
+
+/* Mobile-first responsive utilities */
+@layer utilities {
+  /* Touch-friendly tap targets */
+  .tap-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Safe area padding for notched devices */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Responsive text sizes */
+  .text-responsive {
+    font-size: clamp(0.75rem, 2vw, 1rem);
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hidden {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Prevent pull-to-refresh on mobile */
+  .no-pull-to-refresh {
+    overscroll-behavior: contain;
+  }
+
+  /* Touch action for better mobile UX */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
+}
+
+/* Responsive typography */
+@media (max-width: 640px) {
+  body {
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3 {
+    letter-spacing: -0.3px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  body {
+    font-size: 13px;
+  }
+}
+
+@media (min-width: 1025px) {
+  body {
+    font-size: 14px;
+    line-height: 1.7;
   }
 }
 
