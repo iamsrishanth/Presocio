@@ -123,30 +123,30 @@ export function SchedulingStage({ onNext }: SchedulingStageProps) {
   const approvedPosts = generatedPosts.filter((p) => p.status === 'approved');
 
   return (
-    <div className="space-y-6">
-      <div className="glass-card p-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-xl bg-accent3/10 flex items-center justify-center">
-            <Clock className="w-6 h-6 text-accent3" />
+    <div className="space-y-4 sm:space-y-6">
+      <div className="glass-card p-4 sm:p-6">
+        <div className="flex items-center gap-3 mb-4 sm:mb-6">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-accent3/10 flex items-center justify-center">
+            <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-accent3" />
           </div>
           <div>
-            <h2 className="font-syne font-bold text-lg text-text">Optimal Posting Times</h2>
-            <p className="text-sm text-muted">
+            <h2 className="font-syne font-bold text-base sm:text-lg text-text">Optimal Posting Times</h2>
+            <p className="text-xs sm:text-sm text-muted">
               AI-predicted best times based on your audience activity
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-5 gap-3 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 mb-4 sm:mb-6">
           {(['instagram', 'facebook', 'linkedin', 'youtube', 'x'] as Platform[]).map((platform) => (
-            <div key={platform} className="bg-surface/50 rounded-lg p-3">
-              <div className="text-xs text-muted mb-2 capitalize">{platform}</div>
+            <div key={platform} className="bg-surface/50 rounded-lg p-2 sm:p-3">
+              <div className="text-[10px] sm:text-xs text-muted mb-1.5 sm:mb-2 capitalize">{platform}</div>
               <div className="space-y-1">
                 {optimalTimes[platform].slice(0, 2).map((slot, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs">
+                  <div key={i} className="flex items-center justify-between text-[10px] sm:text-xs">
                     <span className="text-text">{slot.time}</span>
                     <span className={cn(
-                      'tag text-[8px]',
+                      'tag text-[10px]',
                       slot.score >= 90 ? 'tag-green' : 'tag-yellow'
                     )}>
                       {slot.score}%
@@ -159,9 +159,9 @@ export function SchedulingStage({ onNext }: SchedulingStageProps) {
         </div>
       </div>
 
-      <div className="glass-card p-6">
-        <h3 className="font-syne font-bold text-lg text-text mb-4 flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-accent4" />
+      <div className="glass-card p-4 sm:p-6">
+        <h3 className="font-syne font-bold text-base sm:text-lg text-text mb-3 sm:mb-4 flex items-center gap-2">
+          <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-accent4" />
           Publishing Queue
         </h3>
 
@@ -179,18 +179,18 @@ export function SchedulingStage({ onNext }: SchedulingStageProps) {
               return (
                 <motion.div
                   key={item.id}
-                  initial={{ opacity: 0, x: -20 }}
+                  initial={{ opacity: 0, x: -16 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-surface/50 rounded-lg p-4 flex items-center justify-between"
+                  className="bg-surface/50 rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-8 h-8 rounded-full bg-accent2/10 flex items-center justify-center text-sm font-mono text-accent2">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className="w-8 h-8 rounded-full bg-accent2/10 flex items-center justify-center text-sm font-mono text-accent2 flex-shrink-0">
                       {index + 1}
                     </div>
                     <div>
-                      <span className="tag tag-purple text-xs">{item.platform}</span>
-                      <div className="text-xs text-muted mt-1">
+                      <span className="tag tag-purple text-[10px] sm:text-xs">{item.platform}</span>
+                      <div className="text-[10px] sm:text-xs text-muted mt-1">
                         {item.scheduledTime.toLocaleDateString('en-US', {
                           weekday: 'short',
                           month: 'short',
@@ -200,11 +200,11 @@ export function SchedulingStage({ onNext }: SchedulingStageProps) {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     <select
                       value={selectedTimes[item.postId] || ''}
                       onChange={(e) => handleTimeChange(item.postId, e.target.value)}
-                      className="input-field py-2 px-3 text-sm"
+                      className="input-field py-2 sm:py-2 px-2 sm:px-3 text-xs sm:text-sm min-h-[44px] sm:min-h-0 flex-1 sm:flex-none"
                     >
                       {times.map((slot) => (
                         <option key={slot.time} value={slot.time}>
@@ -213,7 +213,7 @@ export function SchedulingStage({ onNext }: SchedulingStageProps) {
                       ))}
                     </select>
                     <div className={cn(
-                      'tag',
+                      'tag text-[10px] sm:text-xs',
                       item.status === 'queued' && 'tag-yellow',
                       item.status === 'published' && 'tag-green'
                     )}>
@@ -227,21 +227,21 @@ export function SchedulingStage({ onNext }: SchedulingStageProps) {
         )}
       </div>
 
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-2 text-sm text-muted">
-          <Zap className="w-4 h-4 text-accent3" />
-            Posts will be automatically published via Zernio API
+      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+        <div className="flex items-center gap-2 text-xs sm:text-sm text-muted">
+          <Zap className="w-4 h-4 text-accent3 flex-shrink-0" />
+          <span>Posts will be automatically published via Zernio API</span>
         </div>
         <button
           onClick={handlePublish}
           disabled={queue.length === 0}
           className={cn(
-            'btn-primary flex items-center gap-2',
+            'btn-primary flex items-center gap-2 justify-center',
             queue.length === 0 && 'opacity-50 cursor-not-allowed'
           )}
         >
           <CheckCircle2 className="w-4 h-4" />
-          Schedule & Proceed to Posting
+          Schedule & Post
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>

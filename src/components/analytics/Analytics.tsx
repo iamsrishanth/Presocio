@@ -231,54 +231,54 @@ export function Analytics() {
   return (
     <div className="space-y-6">
       {/* Overview Stats */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {overviewStats.map((stat, i) => (
           <motion.div
             key={stat.label}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="glass-card p-4"
+            transition={{ delay: i * 0.08 }}
+            className="glass-card p-3 sm:p-4"
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-lg bg-surface flex items-center justify-center">
-                <stat.icon className="w-5 h-5 text-accent2" />
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-surface flex items-center justify-center">
+                <stat.icon className="w-4 h-4 sm:w-5 sm:h-5 text-accent2" />
               </div>
               <div className={cn(
-                'flex items-center gap-1 text-xs font-semibold',
+                'flex items-center gap-1 text-[10px] sm:text-xs font-semibold',
                 stat.up ? 'text-accent3' : 'text-accent'
               )}>
                 {stat.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                 {stat.change}
               </div>
             </div>
-            <div className="font-syne font-bold text-2xl text-text">{stat.value}</div>
-            <div className="text-xs text-muted mt-1">{stat.label}</div>
+            <div className="font-syne font-bold text-xl sm:text-2xl text-text">{stat.value}</div>
+            <div className="text-[10px] sm:text-xs text-muted mt-0.5 sm:mt-1">{stat.label}</div>
           </motion.div>
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
         {/* Weekly Engagement Chart */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="col-span-2 glass-card p-5"
+          className="lg:col-span-2 glass-card p-3 sm:p-5"
         >
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-syne font-bold text-sm flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-accent2" />
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <h3 className="font-syne font-bold text-xs sm:text-sm flex items-center gap-1.5 sm:gap-2">
+              <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent2" />
               Weekly Engagement
             </h3>
           </div>
 
           {hasData ? (
-            <div className="flex items-end gap-3 h-40">
+            <div className="flex items-end gap-2 sm:gap-3 h-32 sm:h-40 overflow-hidden">
               {analytics.weeklyData.map((day, i) => {
                 const maxEngagement = Math.max(...analytics.weeklyData.map(d => d.engagement), 1);
                 return (
-                  <div key={day.day} className="flex-1 flex flex-col items-center gap-2">
+                  <div key={day.day} className="flex-1 flex flex-col items-center gap-1.5 sm:gap-2">
                     <motion.div
                       initial={{ height: 0 }}
                       animate={{ height: `${Math.max((day.engagement / maxEngagement) * 100, day.posts > 0 ? 8 : 2)}%` }}
@@ -289,7 +289,7 @@ export function Analytics() {
                       )}
                     >
                       {day.posts > 0 && (
-                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface px-2 py-1 rounded text-[10px] text-text font-semibold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface px-2 py-1 rounded text-[10px] text-text font-semibold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
                           {day.engagement}% · {day.posts} posts
                         </div>
                       )}
@@ -300,9 +300,9 @@ export function Analytics() {
               })}
             </div>
           ) : (
-            <div className="flex items-center justify-center h-40 text-muted text-sm">
+            <div className="flex items-center justify-center h-32 sm:h-40 text-muted text-xs sm:text-sm">
               <div className="text-center">
-                <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 opacity-30" />
                 <p>Create posts to see engagement data</p>
               </div>
             </div>
@@ -311,39 +311,39 @@ export function Analytics() {
 
         {/* Engagement Breakdown */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="glass-card p-5"
+          className="glass-card p-3 sm:p-5"
         >
-          <h3 className="font-syne font-bold text-sm mb-6 flex items-center gap-2">
-            <Heart className="w-4 h-4 text-accent" />
+          <h3 className="font-syne font-bold text-xs sm:text-sm mb-4 sm:mb-6 flex items-center gap-1.5 sm:gap-2">
+            <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
             Content Scores
           </h3>
           {hasData ? (
-            <div className="flex flex-wrap justify-center gap-4">
+            <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
               <EngagementRing value={analytics.avgHook} label="Hook" color="text-accent3" />
               <EngagementRing value={analytics.avgCta} label="CTA" color="text-accent2" />
               <EngagementRing value={analytics.avgVoice} label="Voice" color="text-accent4" />
             </div>
           ) : (
-            <div className="flex items-center justify-center h-24 text-muted text-sm">
+            <div className="flex items-center justify-center h-24 text-muted text-xs sm:text-sm">
               No data yet
             </div>
           )}
         </motion.div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
         {/* Platform Performance */}
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="glass-card p-5"
+          className="glass-card p-3 sm:p-5"
         >
-          <h3 className="font-syne font-bold text-sm mb-4 flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-accent4" />
+          <h3 className="font-syne font-bold text-xs sm:text-sm mb-3 sm:mb-4 flex items-center gap-1.5 sm:gap-2">
+            <BarChart3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent4" />
             Platform Performance
           </h3>
           {analytics.platformStats.length > 0 ? (
@@ -393,13 +393,13 @@ export function Analytics() {
 
         {/* Top Performing Posts */}
         <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="glass-card p-5"
+          className="glass-card p-3 sm:p-5"
         >
-          <h3 className="font-syne font-bold text-sm mb-4 flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-accent3" />
+          <h3 className="font-syne font-bold text-xs sm:text-sm mb-3 sm:mb-4 flex items-center gap-1.5 sm:gap-2">
+            <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent3" />
             Top Performing Posts
           </h3>
           {analytics.topPosts.length > 0 ? (
@@ -441,16 +441,16 @@ export function Analytics() {
 
       {/* Best Posting Times */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6 }}
-        className="glass-card p-5"
+        className="glass-card p-3 sm:p-5"
       >
-        <h3 className="font-syne font-bold text-sm mb-4 flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-accent2" />
+        <h3 className="font-syne font-bold text-xs sm:text-sm mb-3 sm:mb-4 flex items-center gap-1.5 sm:gap-2">
+          <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent2" />
           Best Posting Times by Platform
         </h3>
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           {([
             { platform: 'instagram' as Platform, times: ['11:00 AM', '1:00 PM', '7:00 PM'] },
             { platform: 'facebook' as Platform, times: ['9:00 AM', '1:00 PM', '3:00 PM'] },

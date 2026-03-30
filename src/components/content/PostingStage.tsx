@@ -132,23 +132,23 @@ export function PostingStage({ onComplete }: PostingStageProps) {
 
   return (
     <div className="space-y-6">
-      <div className="glass-card p-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="glass-card p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
-              <Send className="w-6 h-6 text-accent" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-accent/10 flex items-center justify-center">
+              <Send className="w-5 h-5 sm:w-6 sm:h-6 text-accent" />
             </div>
             <div>
-              <h2 className="font-syne font-bold text-lg text-text">Cross-Platform Publishing</h2>
-              <p className="text-sm text-muted">
+              <h2 className="font-syne font-bold text-base sm:text-lg text-text">Cross-Platform Publishing</h2>
+              <p className="text-xs sm:text-sm text-muted">
                 Publishing via Zernio unified API {apiMode === 'demo' && '(demo mode)'}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="tag tag-green">{publishedCount} published</span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <span className="tag tag-green text-[10px] sm:text-xs">{publishedCount} published</span>
             {failedCount > 0 && (
-              <span className="tag tag-red">{failedCount} failed</span>
+              <span className="tag tag-red text-[10px] sm:text-xs">{failedCount} failed</span>
             )}
           </div>
         </div>
@@ -170,49 +170,49 @@ export function PostingStage({ onComplete }: PostingStageProps) {
             return (
               <motion.div
                 key={item.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 className={cn(
-                  'bg-surface/50 rounded-lg p-4 flex items-center justify-between',
+                  'bg-surface/50 rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3',
                   status === 'publishing' && 'ring-2 ring-accent2/30',
                   status === 'published' && 'border-l-4 border-accent3',
                   status === 'failed' && 'border-l-4 border-accent'
                 )}
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 sm:gap-4">
                   <div className={cn(
-                    'w-10 h-10 rounded-full flex items-center justify-center',
+                    'w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0',
                     status === 'queued' && 'bg-surface',
                     status === 'publishing' && 'bg-accent2/10',
                     status === 'published' && 'bg-accent3/10',
                     status === 'failed' && 'bg-accent/10'
                   )}>
-                    {status === 'queued' && <Clock className="w-5 h-5 text-dimmed" />}
+                    {status === 'queued' && <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-dimmed" />}
                     {status === 'publishing' && (
-                      <Loader2 className="w-5 h-5 text-accent2 animate-spin" />
+                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 text-accent2 animate-spin" />
                     )}
                     {status === 'published' && (
-                      <CheckCircle2 className="w-5 h-5 text-accent3" />
+                      <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-accent3" />
                     )}
                     {status === 'failed' && (
-                      <XCircle className="w-5 h-5 text-accent" />
+                      <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
                     )}
                   </div>
                   
                   <div>
-                    <span className="tag tag-purple text-xs">{item.platform}</span>
-                    <div className="text-xs text-muted mt-1">
+                    <span className="tag tag-purple text-[10px] sm:text-xs">{item.platform}</span>
+                    <div className="text-[10px] sm:text-xs text-muted mt-1">
                       {formatDate(item.scheduledTime)} at {formatTime(item.scheduledTime)}
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                   {status === 'failed' && (
                     <button
                       onClick={() => retryFailed(item.id)}
-                      className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1"
+                      className="btn-secondary text-xs py-2 sm:py-1.5 px-3 flex items-center gap-1 min-h-[44px] sm:min-h-0"
                     >
                       <RefreshCw className="w-3 h-3" />
                       Retry
@@ -220,7 +220,7 @@ export function PostingStage({ onComplete }: PostingStageProps) {
                   )}
                   
                   <span className={cn(
-                    'tag text-xs',
+                    'tag text-[10px] sm:text-xs',
                     status === 'queued' && 'tag-yellow',
                     status === 'publishing' && 'tag-purple',
                     status === 'published' && 'tag-green',

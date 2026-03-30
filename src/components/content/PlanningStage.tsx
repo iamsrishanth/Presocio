@@ -135,26 +135,26 @@ export function PlanningStage({ onNext }: PlanningStageProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="glass-card p-6">
-        <div className="flex items-center justify-between mb-6">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="glass-card p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-accent4/10 flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-accent4" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-accent4/10 flex items-center justify-center">
+              <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-accent4" />
             </div>
             <div>
-              <h2 className="font-syne font-bold text-lg text-text">Content Calendar</h2>
-              <p className="text-sm text-muted">
+              <h2 className="font-syne font-bold text-base sm:text-lg text-text">Content Calendar</h2>
+              <p className="text-xs sm:text-sm text-muted">
                 {plans.length} content ideas generated for {campaignBrief?.campaignDuration} weeks
               </p>
             </div>
           </div>
-          <div className="tag tag-green">
+          <div className="tag tag-green text-[10px] sm:text-xs self-start sm:self-auto">
             {selectedPlans.size} selected
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6">
           {CONTENT_PILLARS.map((pillar) => {
             const count = plans.filter((p) => p.contentPillar === pillar.id).length;
             return (
@@ -168,7 +168,7 @@ export function PlanningStage({ onNext }: PlanningStageProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
         {plans.map((plan, index) => {
           const pillar = CONTENT_PILLARS.find((p) => p.id === plan.contentPillar);
           const isSelected = selectedPlans.has(plan.id);

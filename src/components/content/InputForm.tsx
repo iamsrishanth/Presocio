@@ -104,15 +104,15 @@ export function InputForm({ onNext }: InputFormProps) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-card p-8"
+        className="glass-card p-4 sm:p-6 lg:p-8"
       >
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-xl bg-accent2/10 flex items-center justify-center">
-            <Briefcase className="w-6 h-6 text-accent2" />
+        <div className="flex items-center gap-3 mb-6 sm:mb-8">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl bg-accent2/10 flex items-center justify-center">
+            <Briefcase className="w-5 h-5 sm:w-6 sm:h-6 text-accent2" />
           </div>
           <div>
-            <h2 className="font-syne font-bold text-xl text-text">Campaign Brief</h2>
-            <p className="text-sm text-muted">Tell us about your campaign</p>
+            <h2 className="font-syne font-bold text-lg sm:text-xl text-text">Campaign Brief</h2>
+            <p className="text-xs sm:text-sm text-muted">Tell us about your campaign</p>
           </div>
         </div>
 
@@ -164,7 +164,7 @@ export function InputForm({ onNext }: InputFormProps) {
               <MessageSquare className="w-4 h-4 text-accent2" />
               Content Tone
             </label>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
               {CONTENT_TONES.map((tone) => (
                 <button
                   key={tone.id}
@@ -218,7 +218,7 @@ export function InputForm({ onNext }: InputFormProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
               <label className="block text-sm text-muted mb-2">Posting Frequency</label>
               <select

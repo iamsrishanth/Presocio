@@ -408,29 +408,29 @@ export function Settings() {
                     key={platform}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="glass-card p-4 flex items-center justify-between"
+                    className="glass-card p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4"
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4">
                       <div className={cn(
-                        'w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br',
+                        'w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center bg-gradient-to-br',
                         platformColors[platform]
                       )}>
-                        <Icon className="w-6 h-6 text-white" />
+                        <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                       </div>
                       <div>
-                        <h4 className="font-syne font-semibold text-sm text-text">
+                        <h4 className="font-syne font-semibold text-xs sm:text-sm text-text">
                           {platformDisplayNames[platform]}
                         </h4>
                         {isConnected ? (
                           <div className="flex items-center gap-2 mt-0.5">
                             <CheckCircle2 className="w-3 h-3 text-accent3" />
-                            <span className="text-xs text-accent3">{connection.accountName}</span>
-                            <span className="text-[10px] text-dimmed">· Connected {connection.connectedAt}</span>
+                            <span className="text-[10px] sm:text-xs text-accent3">{connection.accountName}</span>
+                            <span className="text-[10px] text-dimmed hidden sm:inline">· Connected {connection.connectedAt}</span>
                           </div>
                         ) : (
                           <div className="flex items-center gap-2 mt-0.5">
                             <Clock className="w-3 h-3 text-dimmed" />
-                            <span className="text-xs text-dimmed">Not connected</span>
+                            <span className="text-[10px] sm:text-xs text-dimmed">Not connected</span>
                           </div>
                         )}
                       </div>
@@ -439,7 +439,7 @@ export function Settings() {
                       onClick={() => handleConnect(platform)}
                       disabled={connecting || displayDemoMode || mockDataEnabled}
                       className={cn(
-                        'btn-secondary text-xs py-2 px-4 flex items-center gap-1.5',
+                        'btn-secondary text-xs py-2 sm:py-2 px-4 flex items-center gap-1.5 w-full sm:w-auto justify-center',
                         !isConnected && !displayDemoMode && !mockDataEnabled && 'btn-primary',
                         (connecting || displayDemoMode || mockDataEnabled) && 'opacity-50 cursor-not-allowed'
                       )}
@@ -666,7 +666,7 @@ GEMINI_MODEL=gemini-3-flash-preview`}
               <p className="text-xs text-muted">
                 When enabled, Presocio displays realistic simulated data throughout the app. This is useful for:
               </p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                 {[
                   { title: 'Demos', desc: 'Show a fully populated dashboard to clients or stakeholders' },
                   { title: 'Testing', desc: 'Explore all features without connecting real social accounts' },
@@ -700,16 +700,36 @@ GEMINI_MODEL=gemini-3-flash-preview`}
   };
 
   return (
-    <div className="flex gap-6">
-      {/* Sidebar Tabs */}
-      <div className="w-48 flex-shrink-0">
-        <div className="glass-card p-2 space-y-1">
+    <div className="flex flex-col md:flex-row gap-4 sm:gap-6">
+      {/* Tabs — horizontal scroll on mobile, vertical sidebar on desktop */}
+      <div className="md:w-48 flex-shrink-0">
+        {/* Mobile: horizontal scrollable tabs */}
+        <div className="flex md:hidden overflow-x-auto scrollbar-hidden gap-1 pb-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left',
+                'flex items-center gap-2 px-3 py-2.5 rounded-lg transition-all whitespace-nowrap flex-shrink-0 min-h-[44px]',
+                activeTab === tab.id
+                  ? 'bg-accent2/10 text-accent2 border border-accent2/20'
+                  : 'text-muted hover:text-text hover:bg-surface'
+              )}
+            >
+              <tab.icon className="w-4 h-4 flex-shrink-0" />
+              <span className="text-[11px] font-syne font-semibold">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Desktop: vertical sidebar */}
+        <div className="hidden md:block glass-card p-2 space-y-1">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-left min-h-[44px]',
                 activeTab === tab.id
                   ? 'bg-accent2/10 text-accent2 border border-accent2/20'
                   : 'text-muted hover:text-text hover:bg-surface'
