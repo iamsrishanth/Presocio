@@ -180,12 +180,12 @@ interface MockDataState {
 export const useMockDataStore = create<MockDataState>()(
   persist(
     (set) => ({
-      mockDataEnabled: false,
+      mockDataEnabled: true,
       toggleMockData: () => set((state) => ({ mockDataEnabled: !state.mockDataEnabled })),
       setMockDataEnabled: (enabled) => set({ mockDataEnabled: enabled }),
     }),
     {
-      name: 'presocio-mock-data',
+      name: 'presocio-mock-data-v2',
     }
   )
 );
