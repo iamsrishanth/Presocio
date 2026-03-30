@@ -74,10 +74,6 @@ export const useWorkflowStore = create<WorkflowState>()(
     }),
     {
       name: 'presocio-workflow',
-      partialize: (state) => ({
-        brandProfile: state.brandProfile,
-        currentStage: state.currentStage,
-      }),
     }
   )
 );
@@ -180,18 +176,25 @@ interface AnalyticsState {
   updateStats: (updates: Partial<AnalyticsState>) => void;
 }
 
-export const useAnalyticsStore = create<AnalyticsState>((set) => ({
-  totalPosts: 0,
-  scheduledPosts: 0,
-  publishedPosts: 0,
-  averageEngagement: 0,
-  platformStats: {
-    instagram: { posts: 0, engagement: 0 },
-    facebook: { posts: 0, engagement: 0 },
-    linkedin: { posts: 0, engagement: 0 },
-    youtube: { posts: 0, engagement: 0 },
-    x: { posts: 0, engagement: 0 },
-  },
+export const useAnalyticsStore = create<AnalyticsState>()(
+  persist(
+    (set) => ({
+      totalPosts: 0,
+      scheduledPosts: 0,
+      publishedPosts: 0,
+      averageEngagement: 0,
+      platformStats: {
+        instagram: { posts: 0, engagement: 0 },
+        facebook: { posts: 0, engagement: 0 },
+        linkedin: { posts: 0, engagement: 0 },
+        youtube: { posts: 0, engagement: 0 },
+        x: { posts: 0, engagement: 0 },
+      },
 
-  updateStats: (updates) => set((state) => ({ ...state, ...updates })),
-}));
+      updateStats: (updates) => set((state) => ({ ...state, ...updates })),
+    }),
+    {
+      name: 'presocio-analytics',
+    }
+  )
+);

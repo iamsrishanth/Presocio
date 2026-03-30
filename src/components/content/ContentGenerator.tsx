@@ -108,7 +108,7 @@ export function ContentGenerator({ onNextStage }: ContentGeneratorProps) {
           </div>
         </div>
 
-        {generatedPosts.length === 0 ? (
+        {generatedPosts.length === 0 || generatedPosts.some(p => !p.caption) ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 rounded-full bg-accent2/10 flex items-center justify-center mx-auto mb-4">
               <Sparkles className="w-8 h-8 text-accent2" />
