@@ -28,6 +28,9 @@ export function PostingStage({ onComplete }: PostingStageProps) {
   const publishItem = useCallback(async (item: PostingQueue) => {
     setStatuses((prev) => ({ ...prev, [item.id]: 'publishing' }));
 
+    const post = generatedPosts.find((p) => p.id === item.postId);
+    const mediaUrls = post?.videoUrl ? [post.videoUrl] : undefined;
+
     try {
       const res = await fetch('/api/social', {
         method: 'POST',
@@ -38,6 +41,7 @@ export function PostingStage({ onComplete }: PostingStageProps) {
           platforms: [item.platform],
           scheduledFor: item.scheduledTime,
           publishNow: true,
+          ...(mediaUrls ? { mediaUrls } : {})
         }),
       });
 
@@ -165,7 +169,7 @@ export function PostingStage({ onComplete }: PostingStageProps) {
         <div className="space-y-3">
           {postingQueue.map((item, index) => {
             const status = statuses[item.id] || 'queued';
-            const post = postingQueue.find((p) => p.postId === item.postId);
+            const post = generatedPosts.find((p) => p.id === item.postId);
             
             return (
               <motion.div
@@ -174,61 +178,66 @@ export function PostingStage({ onComplete }: PostingStageProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 className={cn(
-                  'bg-surface/50 rounded-lg p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3',
+                  'bg-surface/50 rounded-lg p-3 sm:p-4 flex flex-col gap-3',
                   status === 'publishing' && 'ring-2 ring-accent2/30',
                   status === 'published' && 'border-l-4 border-accent3',
                   status === 'failed' && 'border-l-4 border-accent'
                 )}
               >
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <div className={cn(
-                    'w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0',
-                    status === 'queued' && 'bg-surface',
-                    status === 'publishing' && 'bg-accent2/10',
-                    status === 'published' && 'bg-accent3/10',
-                    status === 'failed' && 'bg-accent/10'
-                  )}>
-                    {status === 'queued' && <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-dimmed" />}
-                    {status === 'publishing' && (
-                      <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 text-accent2 animate-spin" />
-                    )}
-                    {status === 'published' && (
-                      <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-accent3" />
-                    )}
-                    {status === 'failed' && (
-                      <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
-                    )}
-                  </div>
-                  
-                  <div>
-                    <span className="tag tag-purple text-[10px] sm:text-xs">{item.platform}</span>
-                    <div className="text-[10px] sm:text-xs text-muted mt-1">
-                      {formatDate(item.scheduledTime)} at {formatTime(item.scheduledTime)}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 sm:gap-4">
+                    <div className={cn(
+                      'w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0',
+                      status === 'queued' && 'bg-surface',
+                      status === 'publishing' && 'bg-accent2/10',
+                      status === 'published' && 'bg-accent3/10',
+                      status === 'failed' && 'bg-accent/10'
+                    )}>
+                      {status === 'queued' && <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-dimmed" />}
+                      {status === 'publishing' && (
+                        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 text-accent2 animate-spin" />
+                      )}
+                      {status === 'published' && (
+                        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-accent3" />
+                      )}
+                      {status === 'failed' && (
+                        <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
+                      )}
+                    </div>
+                    
+                    <div>
+                      <span className="tag tag-purple text-[10px] sm:text-xs">{item.platform}</span>
+                      <div className="text-[10px] sm:text-xs text-muted mt-1">
+                        {formatDate(item.scheduledTime)} at {formatTime(item.scheduledTime)}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center gap-2 sm:gap-3">
-                  {status === 'failed' && (
-                    <button
-                      onClick={() => retryFailed(item.id)}
-                      className="btn-secondary text-xs py-2 sm:py-1.5 px-3 flex items-center gap-1 min-h-[44px] sm:min-h-0"
-                    >
-                      <RefreshCw className="w-3 h-3" />
-                      Retry
-                    </button>
-                  )}
-                  
-                  <span className={cn(
-                    'tag text-[10px] sm:text-xs',
-                    status === 'queued' && 'tag-yellow',
-                    status === 'publishing' && 'tag-purple',
-                    status === 'published' && 'tag-green',
-                    status === 'failed' && 'tag-red'
-                  )}>
-                    {status}
-                  </span>
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    {status === 'failed' && (
+                      <button
+                        onClick={() => retryFailed(item.id)}
+                        className="btn-secondary text-xs py-2 sm:py-1.5 px-3 flex items-center gap-1 min-h-[44px] sm:min-h-0"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                        Retry
+                      </button>
+                    )}
+                    
+                    <span className={cn(
+                      'tag text-[10px] sm:text-xs',
+                      status === 'queued' && 'tag-yellow',
+                      status === 'publishing' && 'tag-purple',
+                      status === 'published' && 'tag-green',
+                      status === 'failed' && 'tag-red'
+                    )}>
+                      {status}
+                    </span>
+                  </div>
                 </div>
+                {post?.videoUrl && (
+                  <video src={post.videoUrl} controls className="w-full rounded-lg mt-2 mb-2 max-h-48" />
+                )}
               </motion.div>
             );
           })}

@@ -65,6 +65,7 @@ export interface GeneratedPost {
   seoDescription?: string;
   imagePrompt?: string;
   imageUrl?: string;
+  videoUrl?: string;
   brandVoiceScore: number;
   engagementScore: number;
   hookScore: number;

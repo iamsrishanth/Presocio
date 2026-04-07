@@ -29,6 +29,8 @@ interface ContentGeneratorProps {
 export function ContentGenerator({ onNextStage }: ContentGeneratorProps) {
   const { generatedPosts, updateGeneratedPost, campaignBrief } = useWorkflowStore();
   const [generating, setGenerating] = useState(false);
+  const [generateVideo, setGenerateVideo] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('Generating...');
   const [selectedPost, setSelectedPost] = useState<GeneratedPost | null>(null);
   const [editedCaption, setEditedCaption] = useState('');
 
@@ -36,6 +38,7 @@ export function ContentGenerator({ onNextStage }: ContentGeneratorProps) {
     if (!campaignBrief) return;
     
     setGenerating(true);
+    setLoadingMessage('Generating content...');
     
     try {
       const postsToGenerate = generatedPosts.filter((p) => !p.caption);
@@ -49,12 +52,32 @@ export function ContentGenerator({ onNextStage }: ContentGeneratorProps) {
           campaignBrief.keyMessages
         );
         
+        let videoUrl: string | undefined;
+        if (generateVideo) {
+          setLoadingMessage('Rendering Video (JSON2VIDEO)...');
+          try {
+            const videoRes = await fetch('/api/video', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ template: 'social-video', text: content.caption }),
+            });
+            const videoData = await videoRes.json();
+            if (videoData.success) {
+              videoUrl = videoData.url;
+            }
+          } catch (e) {
+            console.error('Failed to generate video', e);
+          }
+          setLoadingMessage('Generating content...');
+        }
+        
         updateGeneratedPost(post.id, {
           caption: content.caption,
           captionVariants: content.captionVariants,
           hashtags: content.hashtags,
           seoDescription: content.seoDescription,
           imagePrompt: content.imagePrompt,
+          videoUrl,
           engagementScore: content.engagementScore,
           hookScore: content.hookScore,
           ctaScore: content.ctaScore,
@@ -65,6 +88,7 @@ export function ContentGenerator({ onNextStage }: ContentGeneratorProps) {
       }
     } finally {
       setGenerating(false);
+      setLoadingMessage('Generating...');
     }
   };
 
@@ -120,6 +144,18 @@ export function ContentGenerator({ onNextStage }: ContentGeneratorProps) {
               Our AI will create platform-optimized content with captions, hashtags, 
               image prompts, and engagement predictions.
             </p>
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <input 
+                type="checkbox" 
+                id="generateVideoToggle" 
+                checked={generateVideo} 
+                onChange={(e) => setGenerateVideo(e.target.checked)} 
+                className="w-4 h-4 rounded border-border bg-surface text-accent2 focus:ring-accent2"
+              />
+              <label htmlFor="generateVideoToggle" className="text-sm text-text cursor-pointer">
+                Generate Video (JSON2VIDEO)
+              </label>
+            </div>
             <button
               onClick={handleGenerate}
               disabled={generating}
@@ -131,7 +167,7 @@ export function ContentGenerator({ onNextStage }: ContentGeneratorProps) {
               {generating ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Generating...
+                  {loadingMessage}
                 </>
               ) : (
                 <>
