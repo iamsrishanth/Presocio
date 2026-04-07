@@ -73,6 +73,21 @@ export async function submitVideoJob(content: GeneratedContent, platform: Platfo
   return response.json();
 }
 
+export async function checkVideoStatus(projectId: string, apiKey: string): Promise<VideoStatusResponse> {
+  const response = await fetch(`${JSON2VIDEO_API_URL}?project=${projectId}`, {
+    method: 'GET',
+    headers: {
+      'x-api-key': apiKey
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to check JSON2VIDEO status: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
 export async function pollVideoStatus(projectId: string, apiKey: string, maxAttempts = 20): Promise<string> {
   for (let i = 0; i < maxAttempts; i++) {
     const response = await fetch(`${JSON2VIDEO_API_URL}?project=${projectId}`, {

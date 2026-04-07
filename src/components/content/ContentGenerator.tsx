@@ -42,50 +42,75 @@ export function ContentGenerator({ onNextStage }: ContentGeneratorProps) {
     
     try {
       const postsToGenerate = generatedPosts.filter((p) => !p.caption);
-      for (const post of postsToGenerate) {
-        const content = await generateContent(
-          campaignBrief.brandName,
-          campaignBrief.campaignObjective,
-          campaignBrief.targetAudience,
-          campaignBrief.contentTone,
-          post.platform,
-          campaignBrief.keyMessages
-        );
-        
-        let videoUrl: string | undefined;
-        if (generateVideo) {
-          setLoadingMessage('Rendering Video (JSON2VIDEO)...');
-          try {
-            const videoRes = await fetch('/api/video', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ template: 'social-video', text: content.caption }),
-            });
-            const videoData = await videoRes.json();
-            if (videoData.success) {
-              videoUrl = videoData.url;
+      
+      await Promise.allSettled(postsToGenerate.map(async (post) => {
+        try {
+          const content = await generateContent(
+            campaignBrief.brandName,
+            campaignBrief.campaignObjective,
+            campaignBrief.targetAudience,
+            campaignBrief.contentTone,
+            post.platform,
+            campaignBrief.keyMessages
+          );
+          
+          let videoUrl: string | undefined;
+          if (generateVideo) {
+            setLoadingMessage(`Rendering Video for ${post.platform}...`);
+            try {
+              const videoRes = await fetch('/api/video', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: content, platform: post.platform }),
+              });
+              const videoData = await videoRes.json();
+              
+              if (videoData.success && videoData.projectId) {
+                let attempts = 0;
+                while (attempts < 20) {
+                  await new Promise(resolve => setTimeout(resolve, 5000));
+                  const statusRes = await fetch(`/api/video?projectId=${videoData.projectId}`);
+                  const statusData = await statusRes.json();
+                  
+                  if (statusData.success && statusData.status?.movie) {
+                    if (statusData.status.movie.status === 'done' && statusData.status.movie.url) {
+                      videoUrl = statusData.status.movie.url;
+                      break;
+                    }
+                    if (statusData.status.movie.status === 'error') {
+                      console.error('Video generation failed:', statusData.status.movie.message);
+                      break;
+                    }
+                  }
+                  attempts++;
+                }
+              }
+            } catch (e) {
+              console.error('Failed to generate video', e);
             }
-          } catch (e) {
-            console.error('Failed to generate video', e);
+            setLoadingMessage('Generating content...');
           }
-          setLoadingMessage('Generating content...');
+          
+          updateGeneratedPost(post.id, {
+            caption: content.caption,
+            captionVariants: content.captionVariants,
+            hashtags: content.hashtags,
+            seoDescription: content.seoDescription,
+            imagePrompt: content.imagePrompt,
+            videoUrl,
+            engagementScore: content.engagementScore,
+            hookScore: content.hookScore,
+            ctaScore: content.ctaScore,
+            hashtagScore: content.hashtagScore,
+            brandVoiceScore: content.brandVoiceScore,
+            status: 'pending'
+          });
+        } catch (postError) {
+          console.error(`Failed to generate post for ${post.platform}:`, postError);
         }
-        
-        updateGeneratedPost(post.id, {
-          caption: content.caption,
-          captionVariants: content.captionVariants,
-          hashtags: content.hashtags,
-          seoDescription: content.seoDescription,
-          imagePrompt: content.imagePrompt,
-          videoUrl,
-          engagementScore: content.engagementScore,
-          hookScore: content.hookScore,
-          ctaScore: content.ctaScore,
-          hashtagScore: content.hashtagScore,
-          brandVoiceScore: content.brandVoiceScore,
-          status: 'pending'
-        });
-      }
+      }));
+    } catch (err) {
+      console.error('Global generation error:', err);
     } finally {
       setGenerating(false);
       setLoadingMessage('Generating...');

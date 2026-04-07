@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { 
   CheckCircle2,
@@ -28,7 +28,8 @@ export function PostingStage({ onComplete }: PostingStageProps) {
   const publishItem = useCallback(async (item: PostingQueue) => {
     setStatuses((prev) => ({ ...prev, [item.id]: 'publishing' }));
 
-    const post = generatedPosts.find((p) => p.id === item.postId);
+    const currentWorkflowState = useWorkflowStore.getState();
+    const post = currentWorkflowState.generatedPosts.find((p) => p.id === item.postId);
     const mediaUrls = post?.videoUrl ? [post.videoUrl] : undefined;
 
     try {
@@ -57,24 +58,24 @@ export function PostingStage({ onComplete }: PostingStageProps) {
       }));
 
       if (success) {
-        updateGeneratedPost(item.postId, {
+        currentWorkflowState.updateGeneratedPost(item.postId, {
           status: 'approved',
           postId: result.postId || `post_${Date.now()}`,
         });
 
-        const post = generatedPosts.find((p) => p.id === item.postId);
-        if (post) {
+        const updatedPost = useWorkflowStore.getState().generatedPosts.find((p) => p.id === item.postId);
+        if (updatedPost) {
           const { platformStats, totalPosts, publishedPosts, averageEngagement } = useAnalyticsStore.getState();
           const newPlatformStats = { ...platformStats };
           const pStat = newPlatformStats[item.platform];
           
-          pStat.engagement = (pStat.engagement * pStat.posts + post.engagementScore) / (pStat.posts + 1);
+          pStat.engagement = (pStat.engagement * pStat.posts + updatedPost.engagementScore) / (pStat.posts + 1);
           pStat.posts += 1;
 
           const newTotal = totalPosts + 1;
-          const newAvgEng = (averageEngagement * totalPosts + post.engagementScore) / newTotal;
+          const newAvgEng = (averageEngagement * totalPosts + updatedPost.engagementScore) / newTotal;
 
-          updateStats({
+          useAnalyticsStore.getState().updateStats({
             totalPosts: newTotal,
             publishedPosts: publishedPosts + 1,
             averageEngagement: newAvgEng,
@@ -85,12 +86,15 @@ export function PostingStage({ onComplete }: PostingStageProps) {
     } catch {
       setStatuses((prev) => ({ ...prev, [item.id]: 'failed' }));
     }
-  }, [updateGeneratedPost]);
+  }, []);
+
+  const isProcessing = useRef(false);
 
   useEffect(() => {
-    if (postingQueue.length === 0) return;
+    if (postingQueue.length === 0 || isProcessing.current) return;
 
     const runQueue = async () => {
+      isProcessing.current = true;
       for (let i = 0; i < postingQueue.length; i++) {
         await publishItem(postingQueue[i]);
         // Small delay between posts to respect rate limits
@@ -102,7 +106,9 @@ export function PostingStage({ onComplete }: PostingStageProps) {
     };
 
     const timer = setTimeout(runQueue, 1000);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+    };
   }, [postingQueue, publishItem, onComplete]);
 
   const retryFailed = async (queueId: string) => {
