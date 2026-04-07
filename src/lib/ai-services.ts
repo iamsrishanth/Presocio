@@ -1,7 +1,9 @@
 import type { Platform, ContentTone, ContentFormat } from '@/types';
+import { zernioGenerateContent } from './zernio-client';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+const ZERNIO_API_KEY = process.env.ZERNIO_API_KEY;
 
 export interface GeneratedContent {
   caption: string;
@@ -79,7 +81,19 @@ Return ONLY valid JSON matching this exact structure:
 }`;
 
   try {
-    if (GEMINI_API_KEY) {
+    if (ZERNIO_API_KEY) {
+      const zernioContent = await zernioGenerateContent(
+        brandName,
+        campaignObjective,
+        targetAudience,
+        tone,
+        platform,
+        keyMessages
+      );
+      if (zernioContent) {
+        return zernioContent;
+      }
+    } else if (GEMINI_API_KEY) {
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
         {
