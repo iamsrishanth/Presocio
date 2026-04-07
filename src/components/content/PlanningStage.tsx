@@ -16,6 +16,8 @@ import type { ContentPlan, Platform, ContentFormat } from '@/types';
 import { useWorkflowStore } from '@/store';
 import { getScoreColor, getScoreBgColor } from '@/lib/utils';
 
+import { toast } from 'react-hot-toast';
+
 interface PlanningStageProps {
   onNext: () => void;
 }
@@ -28,42 +30,47 @@ export function PlanningStage({ onNext }: PlanningStageProps) {
 
   useEffect(() => {
     const generatePlans = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      
-      const pillars = CONTENT_PILLARS;
-      const formats: ContentFormat[] = ['image', 'carousel', 'reel', 'video', 'text'];
-      const themes = [
-        'Industry insights and trends',
-        'Product spotlight and features',
-        'Customer success stories',
-        'Behind the scenes',
-        'How-to and tutorials',
-        'Thought leadership',
-        'Community engagement',
-        'Team highlights',
-      ];
-      
-      const generatedPlans: ContentPlan[] = [];
-      const numPosts = Math.min(parseInt(campaignBrief?.campaignDuration || '2') * 3, 12);
-      
-      for (let i = 0; i < numPosts; i++) {
-        const platform = campaignBrief?.platforms[i % campaignBrief.platforms.length] || 'instagram';
-        const pillar = pillars[i % pillars.length];
-        
-        generatedPlans.push({
-          id: generateId(),
-          theme: themes[i % themes.length],
-          format: formats[Math.floor(Math.random() * formats.length)],
-          platform: platform,
-          trendAngle: 'Leveraging current industry trends with fresh perspectives',
-          engagementPrediction: Math.floor(Math.random() * 25) + 70,
-          contentPillar: pillar.id as 'educational' | 'promotional' | 'community',
+      try {
+        const response = await fetch('/api/plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(campaignBrief),
         });
+        
+        const data = await response.json();
+        
+        if (data.success && data.plans) {
+          const generatedPlans: ContentPlan[] = data.plans.map((p: any) => ({
+            ...p,
+            id: generateId(),
+            scheduledDate: new Date(),
+          }));
+          setPlans(generatedPlans);
+          setSelectedPlans(new Set(generatedPlans.map((p) => p.id)));
+        } else {
+          throw new Error(data.error || 'Failed to generate plans');
+        }
+      } catch (error) {
+        console.error('Plan generation failed:', error);
+        toast.error('Failed to generate content plan. Using fallback data.');
+        // Fallback to minimal static plan if API fails
+        const fallbackPlans: ContentPlan[] = [
+          {
+            id: generateId(),
+            theme: 'Industry insights and trends',
+            format: 'text',
+            platform: campaignBrief?.platforms[0] || 'linkedin',
+            trendAngle: 'Leveraging current industry trends',
+            engagementPrediction: 75,
+            contentPillar: 'educational',
+            scheduledDate: new Date()
+          }
+        ];
+        setPlans(fallbackPlans);
+        setSelectedPlans(new Set([fallbackPlans[0].id]));
+      } finally {
+        setLoading(false);
       }
-      
-      setPlans(generatedPlans);
-      setSelectedPlans(new Set(generatedPlans.map((p) => p.id)));
-      setLoading(false);
     };
     
     if (campaignBrief) {

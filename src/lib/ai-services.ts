@@ -1,4 +1,4 @@
-import type { Platform, ContentTone, ContentFormat } from '@/types';
+import type { Platform, ContentTone, ContentFormat, CampaignBrief } from '@/types';
 import { zernioGenerateContent } from './zernio-client';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
@@ -128,7 +128,70 @@ Return ONLY valid JSON matching this exact structure:
   return generateMockContent(platform, tone);
 }
 
-export async function generateContentPlan(
+export async function generateCampaignPlan(brief: CampaignBrief): Promise<ContentPlanItem[]> {
+  const systemPrompt = `You are an expert social media strategist for ${brief.brandName}.
+Create an optimal content plan for the next ${brief.campaignDuration}.
+Target Audience: ${brief.targetAudience}
+Tone: ${brief.contentTone}
+Platforms: ${brief.platforms.join(', ')}
+Posting frequency: ${brief.postingFrequency}
+Key messages: ${brief.keyMessages.join(', ')}
+Campaign objective: ${brief.campaignObjective}`;
+
+  const userPrompt = `Generate a compelling content plan representing an optimal mix of content pillars (educational, promotional, community), formats (text, image, video, carousel, reel, short, article), themes, and trend angles.
+
+Return ONLY a valid JSON array of objects matching this exact structure:
+[
+  {
+    "theme": "string",
+    "format": "string (text|image|video|carousel|reel|short|article)",
+    "platform": "string (${brief.platforms.join('|')})",
+    "trendAngle": "string",
+    "engagementPrediction": number (0-100),
+    "contentPillar": "string (educational|promotional|community)"
+  }
+]
+
+Generate approximately 3-12 posts based on the duration and frequency. Ensure the output strictly conforms to JSON format without any markdown blocks wrapping it (if you must, just standard JSON array).`;
+
+  try {
+    if (GEMINI_API_KEY) {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }] }],
+            generationConfig: {
+              temperature: 0.7,
+              topK: 40,
+              topP: 0.95,
+              maxOutputTokens: 2048,
+            },
+          }),
+        }
+      );
+
+      const data = await response.json();
+      const generatedText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (generatedText) {
+        const jsonMatch = generatedText.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Gemini API plan generation error:', error);
+  }
+
+  // Fallback to mock generator if API fails
+  return generateMockContentPlan(brief.brandName, brief.campaignObjective, brief.platforms, brief.campaignDuration);
+}
+
+export async function generateMockContentPlan(
   brandName: string,
   campaignObjective: string,
   platforms: Platform[],
